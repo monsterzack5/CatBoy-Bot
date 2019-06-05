@@ -5,7 +5,7 @@ const bot = new Discord.Client();
 const fs = require('fs');
 const request = require('request-promise-native');
 const fileLoader = require('./lib/tools/fileLoader');
-const spam = require('./lib/tools/antispam.js')
+const spam = require('./lib/tools/antispam.')
 
 const express = require('express');
 const path = require('path');
@@ -43,16 +43,16 @@ bot.on('ready', async () => {
     // this is to load Various files on boot and set runtime vars
 
     try {
-        await fileLoader.importFile(bot, 'config_cat.json');
-    } catch (error) {z
+        await fileLoader.importFile(bot, `${process.env.config_file}.json`);
+    } catch (error) {
         console.log(`Error! Error importing (mandatory) boot files! \n${error}`);
         process.exit(1);
     }
-    let config = JSON.parse(fs.readFileSync('./config_cat.json'));
+    let config = JSON.parse(fs.readFileSync(`./${process.env.config_file}.json`));
 
-    bot.prefix = config.prefix;
-    bot.unknown_command_message = config.unknown_command_message;
-    bot.owner_id = config.bot_owner;
+    //bot.prefix = config.prefix;
+    //bot.unknown_command_message = config.unknown_command_message;
+    //bot.owner_id = config.bot_owner;
     bot.user.setActivity(config.game, {
         url: config.game_url,
         type: config.game_state
@@ -62,7 +62,7 @@ bot.on('ready', async () => {
 bot.on('message', async (message) => {
     if (message.author.bot === true) return;
     if (message.channel.type !== 'text' &&
-        message.author.id !== bot.owner_id) {
+        message.author.id !== process.env.bot_owner) {
         return message.channel.send('Zach said im not allowed to dm people :cry:');
     }
 
@@ -76,7 +76,7 @@ bot.on('message', async (message) => {
             let isSpam = await spam.checkAntiSpam(message, command);
             if (isSpam) return message.react('⏲');
             cmdfunction.run(message, messageArguments, command, bot);
-        } else if (bot.unknown_command_message == 'true') {
+        } else if (process.env.unknown_command_message == 'true') {
             message.channel.send('Unknown command!')
         }
     } else if (command == 'prefix') {
