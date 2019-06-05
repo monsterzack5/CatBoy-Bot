@@ -10,7 +10,6 @@
   "dependencies": {
     "booru": "^2.0.2",
     "discord.js": "^11.4.2",
-    "dotenv": "^6.2.0",
     "express": "^4.16.2",
     "randomcolor": "^0.5.4",
     "request": "^2.88.0",
@@ -19,9 +18,12 @@
   "scripts": {
     "info": "echo \"A quick note, all scripts below are ment to run on linux only.\" && exit 0",
     "test": "echo \"You really think i ever make tests? lol \" && exit 0",
-    "dev":"export NODE_ENV=dev && node index",
+    "dev": "export NODE_ENV=dev && node index",
     "start": "export NODE_ENV=production && node index"
   },
   "author": "Zach",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "dotenv": "^8.0.0"
+  }
 }
