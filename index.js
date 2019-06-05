@@ -2,10 +2,11 @@
 const Discord = require('discord.js');
 const bot = new Discord.Client();
 
+require('dotenv').config();
 const fs = require('fs');
 const request = require('request-promise-native');
 const fileLoader = require('./lib/tools/fileLoader');
-const spam = require('./lib/tools/antispam.')
+const spam = require('./lib/tools/antispam');
 
 const express = require('express');
 const path = require('path');
@@ -50,9 +51,7 @@ bot.on('ready', async () => {
     }
     let config = JSON.parse(fs.readFileSync(`./${process.env.config_file}.json`));
 
-    //bot.prefix = config.prefix;
-    //bot.unknown_command_message = config.unknown_command_message;
-    //bot.owner_id = config.bot_owner;
+    bot.prefix = config.prefix;
     bot.user.setActivity(config.game, {
         url: config.game_url,
         type: config.game_state
@@ -108,8 +107,9 @@ process.on('SIGTERM', () => {
 
 // do different things in dev vs prod mode
 if (process.env.NODE_ENV === 'dev') {
-    require('dotenv').config();
     bot.login(process.env.discordtoken_dev);
+    // use a different config file for dev env
+    process.env.config_file = 'config_cat_dev'
 } else if (process.env.NODE_ENV === 'production') {
     bot.login(process.env.discordtoken);
 
