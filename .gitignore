@@ -4,6 +4,8 @@ todo.md
 config_cat.json
 test_files
 .vscode
+catboy_db.json
+catboy_cat_dev.json
 
 # Logs
 logs
