@@ -1,29 +1,29 @@
 {
-  "name": "catboy_bot",
-  "version": "0.0.1",
-  "description": "Sends Catboys",
-  "main": "index.js",
-  "engines": {
-    "node": "^12.4.0",
-    "yarn": "^1.16.0"
-  },
-  "dependencies": {
-    "booru": "^2.0.2",
-    "discord.js": "^11.4.2",
-    "express": "^4.16.2",
-    "randomcolor": "^0.5.4",
-    "request": "^2.88.0",
-    "request-promise-native": "^1.0.7"
-  },
-  "scripts": {
-    "info": "echo \"A quick note, all scripts below are ment to run on linux only.\" && exit 0",
-    "test": "echo \"You really think i ever make tests? lol \" && exit 0",
-    "dev": "export NODE_ENV=dev && node index",
-    "start": "export NODE_ENV=production && node index"
-  },
-  "author": "Zach",
-  "license": "MIT",
-  "devDependencies": {
-    "dotenv": "^8.0.0"
-  }
+   "name": "catboy_bot",
+   "version": "0.0.1",
+   "description": "Sends Catboys",
+   "main": "index.js",
+   "engines": {
+      "node": "^12.4.0",
+      "yarn": "^1.16.0"
+   },
+   "dependencies": {
+      "booru": "^2.0.2",
+      "discord.js": "^11.4.2",
+      "express": "^4.16.2",
+      "randomcolor": "^0.5.4",
+      "request": "^2.88.0",
+      "request-promise-native": "^1.0.7"
+   },
+   "scripts": {
+      "info": "echo \"A quick note, all scripts below are ment to run on linux only.\" && exit 0",
+      "test": "echo \"You really think i ever make tests? lol \" && exit 0",
+      "dev": "export NODE_ENV=dev && node index",
+      "start": "export NODE_ENV=production && node index"
+   },
+   "author": "Zach",
+   "license": "MIT",
+   "devDependencies": {
+      "dotenv": "^8.0.0"
+   }
 }
