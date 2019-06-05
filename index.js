@@ -2,7 +2,6 @@
 const Discord = require('discord.js');
 const bot = new Discord.Client();
 
-//const cron = require('node-cron');
 const fs = require('fs');
 const request = require('request-promise-native');
 const fileLoader = require('./lib/tools/fileLoader');
@@ -12,9 +11,7 @@ const express = require('express');
 const path = require('path');
 const app = express();
 
-require('dotenv').config();
 const port = process.env.PORT || 5010;
-
 
 app.use(express.static(__dirname + '/public'));
 app.get('/', (request, response) => {
@@ -22,7 +19,7 @@ app.get('/', (request, response) => {
 });
 
 app.listen(port, () => {
-    console.log(`Program Starting in a ${process.env.NODE_ENV} env`);
+    console.log(`Program Starting in a ${process.env.NODE_ENV} environment`);
 });
 
 bot.commands = new Discord.Collection;
@@ -42,19 +39,18 @@ fs.readdir('./lib/', (err, files) => {
 });
 
 bot.on('ready', async () => {
-    console.log('Discord Client ready');
-    // this is to load tiktokers.json and config.json on reboot
+    console.log('Discord Client ready!');
+    // this is to load Various files on boot and set runtime vars
 
     try {
         await fileLoader.importFile(bot, 'config_cat.json');
-    } catch (error) {
-        console.log(`Error! Error importing boot files! \n${error}`);
-        process.exit();
+    } catch (error) {z
+        console.log(`Error! Error importing (mandatory) boot files! \n${error}`);
+        process.exit(1);
     }
     let config = JSON.parse(fs.readFileSync('./config_cat.json'));
 
-    //bot.prefix = config.prefix;
-    bot.prefix = '!';
+    bot.prefix = config.prefix;
     bot.unknown_command_message = config.unknown_command_message;
     bot.owner_id = config.bot_owner;
     bot.user.setActivity(config.game, {
@@ -70,9 +66,6 @@ bot.on('message', async (message) => {
         return message.channel.send('Zach said im not allowed to dm people :cry:');
     }
 
-    // temp
-    //if (message.author.id !== bot.owner_id) return;
-
     let messageArguments = message.content.slice(bot.prefix.length).split(' ');
     messageArguments.shift();
     let command = message.content.slice(bot.prefix.length).split(' ').shift();
@@ -87,7 +80,7 @@ bot.on('message', async (message) => {
             message.channel.send('Unknown command!')
         }
     } else if (command == 'prefix') {
-        // this words because when checking for a function
+        // this works because when checking for a function
         // the first letter is removed, meaning things 
         // like aprefix or @prefix also work
 
@@ -97,26 +90,39 @@ bot.on('message', async (message) => {
     }
 });
 
-bot.on('error', async (error) => {
+
+// Some Event listeners
+bot.on('error', (error) => {
     console.error(`Something went wrong... ${JSON.stringify(error, null, 2)}`);
 });
-
+// This handle's a ctrl-c interrupt
 process.on('SIGINT', () => {
     console.log('aught interrupt signal');
-    process.exit();
+    process.exit(1);
 });
-process.on('SIGTERM', async () => {
+// Heroku send's a sigterm once every 24 hours
+process.on('SIGTERM', () => {
     console.log('Goodbye!');
-    //await fileLoader.exportFile(bot, 'tiktokers.json')
-    process.exit();
+    process.exit(0);
 });
-// this stops heroku from disabling my dynamo from no traffic
-setInterval(() => {
-    request({
-        uri: 'https://catbitchbot.herokuapp.com',
-    }).catch((err) => {
-        console.log('this isnt supposed to happen');
-    });
-}, 900000);
-console.log(`ayy ${process.env.NODE_ENV}`)
-bot.login(process.env.discordtoken_dev);
+
+// do different things in dev vs prod mode
+if (process.env.NODE_ENV === 'dev') {
+    require('dotenv').config();
+    bot.login(process.env.discordtoken_dev);
+} else if (process.env.NODE_ENV === 'production') {
+    bot.login(process.env.discordtoken);
+
+    // Heroku will disable a dynamo if it doesn't get traffic every so often
+    // by pinging our own application, we can prevent this
+    setInterval(() => {
+        request({
+            uri: 'https://catbitchbot.herokuapp.com',
+        }).catch((err) => {
+            console.log('this isnt supposed to happen');
+        });
+    }, 900000);
+} else {
+    console.error(`Fatal Error! NODE_ENV not defined! Try running this bot with 'npm run start or npm run dev'`);
+    process.exit(1);
+}
