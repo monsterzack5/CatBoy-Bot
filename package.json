@@ -11,6 +11,7 @@
       "booru": "^2.0.2",
       "discord.js": "^11.4.2",
       "express": "^4.16.2",
+      "node-cron": "^2.0.3",
       "randomcolor": "^0.5.4",
       "request": "^2.88.0",
       "request-promise-native": "^1.0.7"
