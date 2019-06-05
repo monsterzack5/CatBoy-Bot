@@ -1,7 +1,7 @@
 'use strict';
 const Discord = require('discord.js');
 const bot = new Discord.Client();
-
+if (process.env.NODE_ENV === 'dev')
 require('dotenv').config();
 const fs = require('fs');
 const request = require('request-promise-native');
