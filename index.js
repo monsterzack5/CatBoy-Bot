@@ -7,6 +7,8 @@ const fs = require('fs');
 const request = require('request-promise-native');
 const fileLoader = require('./lib/tools/fileLoader');
 const spam = require('./lib/tools/antispam');
+const cron = require('node-cron');
+const chan = require('./lib/tools/4chan')
 
 const express = require('express');
 const path = require('path');
@@ -45,6 +47,7 @@ bot.on('ready', async () => {
 
    try {
       await fileLoader.importFile(bot, `${process.env.config_file}.json`);
+      await fileLoader.importFile(bot, `${process.env.db_file}.json`);
    } catch (error) {
       console.log(`Error! Error importing (mandatory) boot files! \n${error}`);
       process.exit(1);
@@ -103,6 +106,11 @@ process.on('SIGINT', () => {
 process.on('SIGTERM', () => {
    console.log('Goodbye!');
    process.exit(0);
+});
+
+// Updates our 4chan catboy db every 5 minutes
+cron.schedule('*/5 * * * *', () => {
+   chan.update(bot);
 });
 
 // do different things in dev vs prod mode
