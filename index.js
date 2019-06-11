@@ -1,41 +1,58 @@
-'use strict';
 const Discord = require('discord.js');
-const bot = new Discord.Client();
-if (process.env.NODE_ENV === 'dev')
-   require('dotenv').config();
 const fs = require('fs');
-const request = require('request-promise-native');
-const fileLoader = require('./lib/tools/fileLoader');
-const spam = require('./lib/tools/antispam');
 const cron = require('node-cron');
-const chan = require('./lib/tools/4chan')
+const request = require('request-promise-native');
+const http = require('http');
 
-const express = require('express');
-const path = require('path');
-const app = express();
+const spam = require('./lib/tools/antispam');
+const fileLoader = require('./lib/tools/fileLoader');
+const chan = require('./lib/tools/4chan');
 
+const bot = new Discord.Client();
 const port = process.env.PORT || 5010;
 
-app.use(express.static(__dirname + '/public'));
-app.get('/', (request, response) => {
-   response.sendFile(path.join(__dirname + '/views/index.html'));
-});
+// do different things in dev vs prod mode
+if (process.env.NODE_ENV === 'dev') {
+   // eslint-disable-next-line global-require
+   require('dotenv').config();
 
-app.listen(port, () => {
-   console.log(`Program Starting in a ${process.env.NODE_ENV} environment`);
-});
+   // use a different config options for dev mode
+   process.env.config_file = process.env.config_file_dev;
+   process.env.db_file = process.env.db_file_dev;
 
-bot.commands = new Discord.Collection;
+   bot.login(process.env.discordtoken_dev);
+} else if (process.env.NODE_ENV === 'production') {
+   bot.login(process.env.discordtoken);
+   // ping our dyno every 15 minutes so heroku doesnt murder it
+   setInterval(() => {
+      request({
+         uri: 'https://catbitchbot.herokuapp.com',
+      }).catch(console.error);
+   }, 900000);
+} else {
+   console.error('Error! NODE_ENV not defined! Try running this bot with \'npm run start or npm run dev\'');
+   process.exit(1);
+}
+
+// create a http server that we can http get from our bot
+// so heroku doesnt disable the dyno from no traffic
+http.createServer((_req, res) => {
+   res.end();
+}).listen(port);
+
+bot.commands = new Discord.Collection();
+
 fs.readdir('./lib/', (err, files) => {
    if (err) console.error(err);
    // this line only selects .js files, and adds them to command_files
-   let command_files = files.filter(f => f.includes('.js'));
-   for (let cmd of command_files) {
-      let props = require(`./lib/${cmd}`);
+   const commandFiles = files.filter(f => f.includes('.js'));
+   for (const cmd of commandFiles) {
+      // eslint-disable-next-line import/no-dynamic-require, global-require
+      const props = require(`./lib/${cmd}`);
       try {
          bot.commands.set(props.help.name, props);
       } catch (error) {
-         console.log(`Error adding commands, file doesnt have name or help properties`);
+         console.log('Error adding commands, file doesnt have name or help properties');
          process.exit(1);
       }
    }
@@ -52,41 +69,45 @@ bot.on('ready', async () => {
       console.log(`Error! Error importing (mandatory) boot files! \n${error}`);
       process.exit(1);
    }
-   let config = JSON.parse(fs.readFileSync(`./${process.env.config_file}.json`));
+   const config = JSON.parse(fs.readFileSync(`./${process.env.config_file}.json`));
 
    bot.prefix = config.prefix;
-   bot.user.setActivity(config.game, {
-      url: config.game_url,
-      type: config.game_state
-   });
+   // set the game on boot
+   if (config.game_url === '') {
+      bot.user.setActivity(config.game, { type: config.game_state });
+   } else bot.user.setActivity(config.game, { type: config.game_state, url: config.game_url });
 });
 
 bot.on('message', async (message) => {
    if (message.author.bot === true) return;
-   if (message.channel.type !== 'text' &&
-      message.author.id !== process.env.bot_owner) {
-      return message.channel.send('Zach said im not allowed to dm people :cry:');
+   if (message.channel.type !== 'text'
+      && message.author.id !== process.env.bot_owner) {
+      message.channel.send('Zach said im not allowed to dm people :cry:');
+      return;
    }
-
-   let messageArguments = message.content.slice(bot.prefix.length).split(' ');
+   // todo: fix
+   const messageArguments = message.content.slice(bot.prefix.length).split(' ');
    messageArguments.shift();
-   let command = message.content.slice(bot.prefix.length).split(' ').shift();
-   let cmdfunction = bot.commands.get(command);
+   const command = message.content.slice(bot.prefix.length).split(' ').shift();
+   const cmdfunction = bot.commands.get(command);
 
    if (message.content.startsWith(bot.prefix)) {
       if (cmdfunction) {
-         let isSpam = await spam.checkAntiSpam(message, command);
-         if (isSpam) return message.react('⏲');
-         cmdfunction.run(message, messageArguments, command, bot);
-      } else if (process.env.unknown_command_message == 'true') {
-         message.channel.send('Unknown command!')
+         const isSpam = await spam.checkAntiSpam(message, command);
+         if (!isSpam) {
+            cmdfunction.run(message, messageArguments, command, bot);
+         } else {
+            message.react('⏲');
+         }
+      } else if (process.env.unknown_command_message === 'true') {
+         message.channel.send('Unknown command!');
       }
-   } else if (command == 'prefix') {
+   } else if (command === 'prefix') {
       // this works because when checking for a function
-      // the first letter is removed, meaning things 
+      // the first letter is removed, meaning things
       // like aprefix or @prefix also work
 
-      // TODO: make this not work based on len of prefix, 
+      // TODO: make this not work based on len of prefix,
       // so !prefix actually works likes its supposed too
       message.channel.send(`My prefix is currently ${bot.prefix}`);
    }
@@ -112,25 +133,3 @@ process.on('SIGTERM', () => {
 cron.schedule('*/5 * * * *', () => {
    chan.update(bot);
 });
-
-// do different things in dev vs prod mode
-if (process.env.NODE_ENV === 'dev') {
-   bot.login(process.env.discordtoken_dev);
-   // use a different config file for dev env
-   process.env.config_file = 'config_cat_dev'
-} else if (process.env.NODE_ENV === 'production') {
-   bot.login(process.env.discordtoken);
-
-   // Heroku will disable a dynamo if it doesn't get traffic every so often
-   // by pinging our own application, we can prevent this
-   setInterval(() => {
-      request({
-         uri: 'https://catbitchbot.herokuapp.com',
-      }).catch((err) => {
-         console.log('this isnt supposed to happen');
-      });
-   }, 900000);
-} else {
-   console.error(`Fatal Error! NODE_ENV not defined! Try running this bot with 'npm run start or npm run dev'`);
-   process.exit(1);
-}
