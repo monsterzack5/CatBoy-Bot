@@ -9,6 +9,7 @@ const fileLoader = require('./lib/tools/fileLoader');
 const chan = require('./lib/tools/4chan');
 
 const bot = new Discord.Client();
+bot.commands = new Discord.Collection();
 const port = process.env.PORT || 5010;
 
 // eslint-disable-next-line global-require
@@ -40,24 +41,6 @@ http.createServer((_req, res) => {
    res.end();
 }).listen(port);
 
-bot.commands = new Discord.Collection();
-
-fs.readdir('./lib/', (err, files) => {
-   if (err) console.error(err);
-   // this line only selects .js files, and adds them to command_files
-   const commandFiles = files.filter(f => f.includes('.js'));
-   for (const cmd of commandFiles) {
-      // eslint-disable-next-line import/no-dynamic-require, global-require
-      const props = require(`./lib/${cmd}`);
-      try {
-         bot.commands.set(props.help.name, props);
-      } catch (error) {
-         console.log('Error adding commands, file doesnt have name or help properties');
-         process.exit(1);
-      }
-   }
-});
-
 bot.on('ready', async () => {
    console.log('Discord Client ready!');
    // this is to load Various files on boot and set runtime vars
@@ -76,6 +59,23 @@ bot.on('ready', async () => {
    if (config.game_url === '') {
       bot.user.setActivity(config.game, { type: config.game_state });
    } else bot.user.setActivity(config.game, { type: config.game_state, url: config.game_url });
+
+   // only import the command files AFTER discord.js says its ready
+   fs.readdir('./lib/', (err, files) => {
+      if (err) console.error(err);
+      // this line only selects .js files, and adds them to command_files
+      const commandFiles = files.filter(f => f.includes('.js'));
+      for (const cmd of commandFiles) {
+         // eslint-disable-next-line import/no-dynamic-require, global-require
+         const props = require(`./lib/${cmd}`);
+         try {
+            bot.commands.set(props.help.name, props);
+         } catch (error) {
+            console.log('Error adding commands, file doesnt have name or help properties');
+            process.exit(1);
+         }
+      }
+   });
 });
 
 bot.on('message', async (message) => {
