@@ -11,11 +11,11 @@ const chan = require('./lib/tools/4chan');
 const bot = new Discord.Client();
 const port = process.env.PORT || 5010;
 
+// eslint-disable-next-line global-require
+if (fs.existsSync('.env')) require('dotenv').config();
+
 // do different things in dev vs prod mode
 if (process.env.NODE_ENV === 'dev') {
-   // eslint-disable-next-line global-require
-   require('dotenv').config();
-
    // use a different config options for dev mode
    process.env.config_file = process.env.config_file_dev;
    process.env.db_file = process.env.db_file_dev;
