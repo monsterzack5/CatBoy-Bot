@@ -11,6 +11,7 @@ const chan = require('./lib/tools/4chan');
 const bot = new Discord.Client();
 bot.commands = new Discord.Collection();
 const port = process.env.PORT || 5010;
+let react;
 
 // eslint-disable-next-line global-require
 if (fs.existsSync('.env')) require('dotenv').config();
@@ -43,8 +44,12 @@ http.createServer((_req, res) => {
 
 bot.on('ready', async () => {
    console.log('Discord Client ready!');
-   // this is to load Various files on boot and set runtime vars
 
+   // only load this when discord is ready
+   // eslint-disable-next-line global-require
+   react = require('./lib/tools/react');
+
+   // this is to load Various files on boot and set runtime vars
    try {
       await fileLoader.importFile(bot, `${process.env.config_file}.json`);
       await fileLoader.importFile(bot, `${process.env.db_file}.json`);
@@ -113,6 +118,16 @@ bot.on('message', async (message) => {
    }
 });
 
+// this handle's reactions to our bot's messages
+bot.on('raw', async (data) => {
+   if (data.t === 'MESSAGE_REACTION_ADD') {
+      const msg = await bot.channels.get(data.d.channel_id).fetchMessage(data.d.message_id);
+      if (msg.author.id === bot.user.id
+         && data.d.emoji.name === '🐱') {
+         react.handleReact(data.d.user_id, msg.embeds[0].image.url, bot);
+      }
+   }
+});
 
 // Some Event listeners
 bot.on('error', (error) => {
