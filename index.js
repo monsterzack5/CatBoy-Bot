@@ -45,10 +45,7 @@ http.createServer((_req, res) => {
 bot.on('ready', async () => {
    console.log('Discord Client ready!');
 
-   // only load this when discord is ready
-   // eslint-disable-next-line global-require
-   react = require('./lib/tools/react');
-
+   
    // this is to load Various files on boot and set runtime vars
    try {
       await fileLoader.importFile(bot, `${process.env.config_file}.json`);
@@ -57,6 +54,10 @@ bot.on('ready', async () => {
       console.log(`Error! Error importing (mandatory) boot files! \n${error}`);
       process.exit(1);
    }
+
+   // only load this when discord is ready
+   // eslint-disable-next-line global-require
+   react = require('./lib/tools/react');
    const config = JSON.parse(fs.readFileSync(`./${process.env.config_file}.json`));
 
    bot.prefix = config.prefix;
