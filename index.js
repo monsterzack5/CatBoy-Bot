@@ -45,7 +45,6 @@ http.createServer((_req, res) => {
 bot.on('ready', async () => {
    console.log('Discord Client ready!');
 
-   
    // this is to load Various files on boot and set runtime vars
    try {
       await fileLoader.importFile(bot, `${process.env.config_file}.json`);
@@ -84,38 +83,28 @@ bot.on('ready', async () => {
    });
 });
 
-bot.on('message', async (message) => {
-   if (message.author.bot === true) return;
+bot.on('message', (message) => {
+   if (message.author.bot) return;
    if (message.channel.type !== 'text'
       && message.author.id !== process.env.bot_owner) {
-      message.channel.send('Zach said im not allowed to dm people :cry:');
+      message.react('🤔');
       return;
    }
-   // todo: fix
    const messageArguments = message.content.slice(bot.prefix.length).split(' ');
-   messageArguments.shift();
-   const command = message.content.slice(bot.prefix.length).split(' ').shift();
-   const cmdfunction = bot.commands.get(command);
-
+   const command = messageArguments.shift();
    if (message.content.startsWith(bot.prefix)) {
+      const cmdfunction = bot.commands.get(command);
       if (cmdfunction) {
-         const isSpam = await spam.checkAntiSpam(message, command);
+         const isSpam = spam.checkAntiSpam(message, command);
+         console.log(`isSpam is ${isSpam}`);
          if (!isSpam) {
             cmdfunction.run(message, messageArguments, command, bot);
          } else {
             message.react('⏲');
          }
-      } else if (process.env.unknown_command_message === 'true') {
-         message.channel.send('Unknown command!');
       }
-   } else if (command === 'prefix') {
-      // this works because when checking for a function
-      // the first letter is removed, meaning things
-      // like aprefix or @prefix also work
-
-      // TODO: make this not work based on len of prefix,
-      // so !prefix actually works likes its supposed too
-      message.channel.send(`My prefix is currently ${bot.prefix}`);
+   } else if (message.content.substring(1, 7) === 'prefix') {
+      message.channel.send(`My prefix is currently ${bot.prefix}!`);
    }
 });
 
