@@ -7,6 +7,7 @@ catboy_db.json
 catboy_db_dev.json
 config_cat.json
 config_cat_dev.json
+*.db
 
 # Logs
 logs

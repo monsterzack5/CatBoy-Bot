@@ -1,15 +1,16 @@
-const Discord = require('discord.js');
 const fs = require('fs');
 const cron = require('node-cron');
 const request = require('request-promise-native');
 const http = require('http');
 
+const { bot } = require('./lib/tools/helper');
+const { commands } = require('./lib/tools/helper');
+
 const spam = require('./lib/tools/antispam');
 const fileLoader = require('./lib/tools/fileLoader');
 const chan = require('./lib/tools/4chan');
 
-const bot = new Discord.Client();
-bot.commands = new Discord.Collection();
+bot.commands = commands;
 const port = process.env.PORT || 5010;
 let react;
 
@@ -47,8 +48,8 @@ bot.on('ready', async () => {
 
    // this is to load Various files on boot and set runtime vars
    try {
-      await fileLoader.importFile(bot, `${process.env.config_file}.json`);
-      await fileLoader.importFile(bot, `${process.env.db_file}.json`);
+      await fileLoader.importFile(`${process.env.config_file}.json`);
+      await fileLoader.importFile(`${process.env.db_file}.json`);
    } catch (error) {
       console.log(`Error! Error importing (mandatory) boot files! \n${error}`);
       process.exit(1);
@@ -96,7 +97,6 @@ bot.on('message', (message) => {
       const cmdfunction = bot.commands.get(command);
       if (cmdfunction) {
          const isSpam = spam.checkAntiSpam(message, command);
-         console.log(`isSpam is ${isSpam}`);
          if (!isSpam) {
             cmdfunction.run(message, messageArguments, command, bot);
          } else {
@@ -136,5 +136,5 @@ process.on('SIGTERM', () => {
 
 // Updates our 4chan catboy db every 5 minutes
 cron.schedule('*/5 * * * *', () => {
-   chan.update(bot);
+   chan.update();
 });
