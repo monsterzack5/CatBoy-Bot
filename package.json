@@ -8,18 +8,19 @@
       "yarn": "^1.16.0"
    },
    "dependencies": {
+      "better-sqlite3": "^5.4.0",
       "booru": "^2.0.2",
       "discord.js": "^11.4.2",
+      "dotenv": "^8.0.0",
       "node-cron": "^2.0.3",
       "randomcolor": "^0.5.4",
       "request": "^2.88.0",
-      "request-promise-native": "^1.0.7",
-      "dotenv": "^8.0.0"
+      "request-promise-native": "^1.0.7"
    },
    "scripts": {
       "info": "echo \"A quick note, all scripts below are ment to run on linux only.\" && exit 0",
       "test": "echo \"You really think i ever make tests? lol \" && exit 0",
-      "dev": "export NODE_ENV=dev && node index",
+      "dev": "export NODE_ENV=dev && node index.js",
       "start": "export NODE_ENV=production && node index"
    },
    "author": "Zach",
