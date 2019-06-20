@@ -123,7 +123,7 @@ bot.on('raw', async (data) => {
       const msg = await bot.channels.get(data.d.channel_id).fetchMessage(data.d.message_id);
       if (msg.author.id === bot.user.id
          && data.d.emoji.name === '🐱') {
-         react.handleReact(data.d.user_id, msg.embeds[0].image.url, bot);
+         react.handleReact(data.d.user_id, msg.embeds[0].image.url);
       }
    }
 });
