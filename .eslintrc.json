@@ -13,7 +13,9 @@
       "sourceType": "module"
    },
    "rules": {
-      "indent": ["error", 3],
+      "indent": ["error", 3, {
+         "SwitchCase": 1
+      }],
       "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"],
       "no-console": "off"
    }
