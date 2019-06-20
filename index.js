@@ -1,18 +1,18 @@
+/* eslint-disable global-require */
 const fs = require('fs');
 const cron = require('node-cron');
 const request = require('request-promise-native');
 const http = require('http');
 
-const { bot } = require('./lib/tools/helper');
-const { commands } = require('./lib/tools/helper');
-
 const spam = require('./lib/tools/antispam');
 const fileLoader = require('./lib/tools/fileLoader');
-const chan = require('./lib/tools/4chan');
+const { bot } = require('./lib/tools/helper');
 
-bot.commands = commands;
 const port = process.env.PORT || 5010;
 let react;
+let chan;
+let bing;
+let db;
 
 // eslint-disable-next-line global-require
 if (fs.existsSync('.env')) require('dotenv').config();
@@ -49,18 +49,27 @@ bot.on('ready', async () => {
    // this is to load Various files on boot and set runtime vars
    try {
       await fileLoader.importFile(`${process.env.config_file}.json`);
-      await fileLoader.importFile(`${process.env.db_file}.json`);
+      await fileLoader.importFile(`${process.env.db_file}.db`);
    } catch (error) {
       console.log(`Error! Error importing (mandatory) boot files! \n${error}`);
       process.exit(1);
    }
 
    // only load this when discord is ready
-   // eslint-disable-next-line global-require
-   react = require('./lib/tools/react');
-   const config = JSON.parse(fs.readFileSync(`./${process.env.config_file}.json`));
+   const { commands, initDB } = require('./lib/tools/helper');
+   initDB();
 
+   react = require('./lib/tools/react');
+   chan = require('./lib/tools/4chan');
+   bing = require('./lib/tools/bing');
+   // eslint-disable-next-line prefer-destructuring
+   db = require('./lib/tools/helper').db;
+
+   const config = JSON.parse(fs.readFileSync(`./${process.env.config_file}.json`));
    bot.prefix = config.prefix;
+   bot.commands = commands;
+
+
    // set the game on boot
    if (config.game_url === '') {
       bot.user.setActivity(config.game, { type: config.game_state });
@@ -119,22 +128,22 @@ bot.on('raw', async (data) => {
    }
 });
 
-// Some Event listeners
-bot.on('error', (error) => {
-   console.error(`Something went wrong... ${JSON.stringify(error, null, 2)}`);
-});
-// This handle's a ctrl-c interrupt
-process.on('SIGINT', () => {
-   console.log('aught interrupt signal');
-   process.exit(1);
-});
-// Heroku send's a sigterm once every 24 hours
-process.on('SIGTERM', () => {
-   console.log('Goodbye!');
-   process.exit(0);
+// update the 4chan db, then backup the .db, then export the .db, every 5 minutes
+cron.schedule('*/5 * * * *', async () => {
+   if (!fs.existsSync('./tmp')) {
+      fs.mkdirSync('./tmp');
+   }
+
+   await chan.update();
+   try {
+      await db.backup(`./tmp/${process.env.db_file}.db`);
+   } catch (e) {
+      console.error(`Error! Failed to backup the db!/n${e}`);
+   }
+   await fileLoader.exportFile(`./tmp/${process.env.db_file}.db`);
 });
 
-// Updates our 4chan catboy db every 5 minutes
-cron.schedule('*/5 * * * *', () => {
-   chan.update();
+// updates our bing catboy db once a day at 1pm
+cron.schedule('0 13 * * *', () => {
+   bing.update();
 });
