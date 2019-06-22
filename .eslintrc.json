@@ -3,17 +3,24 @@
       "es6": true,
       "node": true
    },
-   "extends": "airbnb-base",
+   "extends": [
+      "airbnb-base",
+      "plugin:@typescript-eslint/recommended"
+   ],
+   "parser": "@typescript-eslint/parser",
    "globals": {
       "Atomics": "readonly",
       "SharedArrayBuffer": "readonly"
    },
    "parserOptions": {
-      "ecmaVersion": 2018,
+      "ecmaVersion": 2019,
       "sourceType": "module"
    },
+   "plugins": [
+      "@typescript-eslint"
+   ],
    "rules": {
-      "indent": ["error", 3, {
+      "@typescript-eslint/indent": ["error", 3, {
          "SwitchCase": 1
       }],
       "no-restricted-syntax": ["error", "ForInStatement", "LabeledStatement", "WithStatement"],

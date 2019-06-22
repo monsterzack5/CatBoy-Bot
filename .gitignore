@@ -1,13 +1,11 @@
 # Personal Files
-scratch.*
 todo.md
 test_files
 .vscode
-catboy_db.json
-catboy_db_dev.json
 config_cat.json
 config_cat_dev.json
 *.db
+dist
 
 # Logs
 logs

@@ -2,7 +2,7 @@
    "name": "catboy_bot",
    "version": "0.0.1",
    "description": "Sends Catboys",
-   "main": "index.js",
+   "main": "dist/index.js",
    "engines": {
       "node": "^12.4.0",
       "yarn": "^1.16.0"
@@ -19,15 +19,23 @@
    },
    "scripts": {
       "info": "echo \"A quick note, all scripts below are ment to run on linux only.\" && exit 0",
-      "test": "echo \"You really think i ever make tests? lol \" && exit 0",
-      "dev": "export NODE_ENV=dev && node index.js",
-      "start": "export NODE_ENV=production && node index"
+      "build": "tsc",
+      "postinstall": "npm run build",
+      "dev": "export NODE_ENV=dev && node dist/index.js",
+      "start": "export NODE_ENV=production && node dist/index.js"
    },
    "author": "Zach",
    "license": "MIT",
    "devDependencies": {
+      "@types/better-sqlite3": "^5.4.0",
+      "@types/node": "^12.0.10",
+      "@types/node-fetch": "^2.3.7",
+      "@types/request-promise-native": "^1.0.16",
+      "@typescript-eslint/eslint-plugin": "^1.10.2",
+      "@typescript-eslint/parser": "^1.10.2",
       "eslint": "^5.16.0",
       "eslint-config-airbnb-base": "^13.1.0",
-      "eslint-plugin-import": "^2.17.3"
+      "eslint-plugin-import": "^2.17.3",
+      "typescript": "^3.5.2"
    }
 }
