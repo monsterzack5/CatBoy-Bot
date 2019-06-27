@@ -1,47 +1,56 @@
-const fileLoader = require('./tools/fileLoader');
-const chan = require('./tools/4chan');
-const bing = require('./tools/bing');
+import { Message } from 'discord.js';
+import { exportFile } from './tools/fileLoader';
+import { updateChan } from './tools/4chan';
+import { updateBing } from './tools/bing';
 
-module.exports.run = async (message, args) => {
-   // this checks if the given command was just: `-config`
-   if (message.author.id !== process.env.bot_owner) return message.react('❌');
-   if (!args.length) return message.react('❌');
+export default (message: Message, args: string[]): void => {
+   if (message.author.id !== process.env.botOwner || !args.length) {
+      message.react('❌');
+      return;
+   }
 
    switch (args[0].toLowerCase()) {
       case 'update':
-         message.channel.send(`Updating ${process.env.config_file} using local version`);
-         return fileLoader.exportFile(`${process.env.config_file}.json`);
+         message.channel.send(`Updating ${process.env.configFile} using local version`);
+         exportFile(`${process.env.configFile}.json`);
+         break;
 
       case 'updatedb':
-         message.channel.send(`Updating ${process.env.db_file} using local version`);
-         return fileLoader.exportFile(`${process.env.db_file}.db`);
+         message.channel.send(`Updating ${process.env.dbFile} using local version`);
+         exportFile(`${process.env.dbFile}.db`);
+         break;
 
       case 'dump':
-         return message.channel.send({
-            files: [`${process.env.config_file}.json`],
+         message.channel.send({
+            files: [`${process.env.configFile}.json`],
          });
+         break;
 
       case 'update4chan':
          message.channel.send('Updating 4chan imagedb');
-         return chan.update();
+         updateChan();
+         break;
 
       case 'dump4chan':
-         return message.channel.send({
-            files: [`${process.env.db_file}.db`],
+         message.channel.send({
+            files: [`${process.env.dbFile}.db`],
          });
+         break;
 
       case 'updatebing':
-         bing.update();
-         return message.channel.send('Updating bing db!');
+         updateBing();
+         message.channel.send('Updating bing db!');
+         break;
 
       default:
-         return message.channel.send(
+         message.channel.send(
             'Unexpected first modifier, should be: [add] or [delete] or [list]',
          );
+         break;
    }
 };
 
-module.exports.help = {
+export const help = {
    name: 'config',
    help: '[update] or [update4chan] or [dumb] or [dumb4chan]',
 };

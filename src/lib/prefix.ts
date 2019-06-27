@@ -1,20 +1,19 @@
-const fs = require('fs');
-const fileLoader = require('./tools/fileLoader');
-const { bot } = require('./tools/helper');
+import { readFileSync, writeFileSync } from 'fs';
+import { Message } from 'discord.js';
+import { exportFile } from './tools/fileLoader';
 
-module.exports.run = async (message, args) => {
-   if (message.author.id !== process.env.bot_owner) {
+export default (message: Message, args: string[]): void => {
+   if (message.author.id !== process.env.botOwner) {
       message.react('❌');
       return;
    }
-   const config = JSON.parse(fs.readFileSync(`./${process.env.config_file}.json`));
+   const config = JSON.parse(readFileSync(`./${process.env.configFile}.json`).toString());
    if (args.length > 0) {
       [config.prefix] = args;
-      [bot.prefix] = args;
-      console.log(`bot.prefix: ${bot.prefix}`);
+      [process.env.prefix] = args;
       message.channel.send('Prefix changed!');
-      fs.writeFileSync(`./${process.env.config_file}.json`, JSON.stringify(config, null, 2));
-      fileLoader.exportFile(`${process.env.config_file}.json`);
+      writeFileSync(`./${process.env.configFile}.json`, JSON.stringify(config, null, 2));
+      exportFile(`${process.env.configFile}.json`);
    } else message.channel.send('Prefix can\'t be blank!');
 };
 

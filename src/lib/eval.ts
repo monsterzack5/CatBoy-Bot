@@ -1,7 +1,9 @@
-const util = require('util');
+import { Message } from 'discord.js';
 
-module.exports.run = async (message, args) => {
-   if (message.author.id !== process.env.bot_owner) {
+import { inspect } from 'util';
+
+export default (message: Message, args: string[]): void => {
+   if (message.author.id !== process.env.botOwner) {
       message.react('❌');
       return;
    }
@@ -10,7 +12,7 @@ module.exports.run = async (message, args) => {
       // eslint-disable-next-line no-eval
       let evaled = eval(code);
       if (typeof evaled !== 'string') {
-         evaled = util.inspect(evaled);
+         evaled = inspect(evaled);
       }
       message.channel.send(evaled);
    } catch (err) {
@@ -18,7 +20,7 @@ module.exports.run = async (message, args) => {
    }
 };
 
-module.exports.help = {
+export const help = {
    name: 'eval',
    help: 'you can\'t use this',
 };

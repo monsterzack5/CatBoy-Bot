@@ -1,14 +1,14 @@
-const request = require('request-promise-native');
-const { db } = require('./helper');
+import request from 'request-promise-native';
+import { db } from './db';
 
-const insertImages = db.prepare('INSERT OR REPLACE INTO chancats (no, ext) VALUES(?, ?)');
-const insertThread = db.prepare('INSERT OR REPLACE INTO threads (id, no) VALUES(?, ?)');
+const insertImages = db.get().prepare('INSERT OR REPLACE INTO chancats (no, ext) VALUES(?, ?)');
+const insertThread = db.get().prepare('INSERT OR REPLACE INTO threads (id, no) VALUES(?, ?)');
 
-const deleteChan = db.prepare('DELETE FROM chancats WHERE no = ?');
-const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'chan\'');
+const deleteChan = db.get().prepare('DELETE FROM chancats WHERE no = ?');
+const searchFiltered = db.get().prepare('SELECT * FROM filtered WHERE source = \'chan\'');
 
 
-const insertImagesRemoveFiltered = db.transaction((images, badImages) => {
+const insertImagesRemoveFiltered = db.get().transaction((images, badImages): void => {
    for (const image of images) {
       // since `no` are number literals, sqlite will
       // read them as `XXXXXXX.0` without .toString
@@ -19,16 +19,35 @@ const insertImagesRemoveFiltered = db.transaction((images, badImages) => {
    }
 });
 
-function getJSON(url) {
-   return new Promise((resolve, reject) => {
-      request({
-         uri: url,
-         json: true,
-      }).then(data => resolve(data)).catch(err => reject(err));
+function getThread(threadNo: number): Promise<ThreadResponse> {
+   return new Promise(async (resolve, reject): Promise<void> => {
+      try {
+         const req = await request({
+            uri: `https://a.4cdn.org/cm/thread/${threadNo}.json`,
+            json: true,
+         });
+         return resolve(req);
+      } catch (e) {
+         return reject(e);
+      }
    });
 }
 
-function checkThread(singleThread) {
+function getCatalog(): Promise<CatalogPage[]> {
+   return new Promise(async (resolve, reject): Promise<void> => {
+      try {
+         const req = await request({
+            uri: 'https://a.4cdn.org/cm/catalog.json',
+            json: true,
+         });
+         return resolve(req);
+      } catch (e) {
+         return reject(e);
+      }
+   });
+}
+
+function checkThread(singleThread: Post): boolean {
    const thread = singleThread;
    const regex = /cat\s?boy/i;
    if (!thread.sub) thread.sub = '';
@@ -37,22 +56,24 @@ function checkThread(singleThread) {
       return true;
    }
    return false;
-   // return (!!(thread.sub.match(regex) || thread.com.match(regex)));
 }
 
-function update() {
-   return new Promise(async (resolve) => {
-      const info = await getJSON('https://a.4cdn.org/cm/catalog.json');
-      let goodThreads = [];
-      let imgLinks;
+export function updateChan(): Promise<void> {
+   return new Promise(async (resolve): Promise<void> => {
+      const info = await getCatalog();
+      let goodThreads: number[] = [];
+      let imgLinks: ChanImage[] = [];
 
       // do something for each page
       for (const page of info) {
          // filter each thread using the checkThread function passed to .filter
-         goodThreads = goodThreads.concat(page.threads.filter(checkThread)
-            .map(p => p.no));
+         if (page.threads) {
+            goodThreads = goodThreads.concat(page.threads.filter(checkThread)
+               .map((p: Post) => p.no));
+         }
       }
 
+      // todo: lol
       // handling for if no threads exist
       if (!goodThreads.length) {
          // drop the table if no good threads exist??
@@ -61,16 +82,19 @@ function update() {
       }
 
       // get all the posts in every thread that the last function returned
-      const allThreadInfo = await Promise.all(goodThreads.map(thread => getJSON(`https://a.4cdn.org/cm/thread/${thread}.json`)));
+      const allThreadInfo = await Promise.all(goodThreads.map(thread => getThread(thread)));
 
       // do something for every thread
       for (const threadInfo of allThreadInfo) {
          // filter all posts where filename exists and ext !== webm, push object to array
-         imgLinks = threadInfo.posts
-            .filter(p => p.filename && p.ext !== '.webm')
-            .map(p => ({
-               no: p.tim,
-               ext: p.ext,
+         imgLinks = imgLinks.concat(threadInfo.posts
+            .filter((p: Post) => p.filename && p.ext !== '.webm')
+            .map((p: Post) => {
+               const ip = p as ImagePost;
+               return {
+                  no: ip.tim,
+                  ext: ip.ext,
+               };
             }));
       }
 
@@ -91,6 +115,34 @@ function update() {
    });
 }
 
-module.exports = {
-   update,
-};
+interface ChanImage {
+   ext: string;
+   no: number;
+}
+
+interface Post {
+   tim?: number;
+   ext?: string;
+   no: number;
+   sub: string;
+   com: string;
+   filename: string;
+}
+
+interface ImagePost {
+   tim: number;
+   ext: string;
+   no: number;
+   sub: string;
+   com: string;
+   filename: string;
+}
+
+interface CatalogPage {
+   threads: ImagePost[];
+   page: number;
+}
+
+interface ThreadResponse extends Post {
+   posts: Post[];
+}

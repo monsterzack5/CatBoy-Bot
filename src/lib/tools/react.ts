@@ -1,11 +1,7 @@
-const { db } = require('./helper');
+import { db } from './db';
 
-const insert = db.prepare('INSERT OR REPLACE INTO favorites (uid, url) VALUES(?, ?)');
+const insert = db.get().prepare('INSERT OR REPLACE INTO favorites (uid, url) VALUES(?, ?)');
 
-async function handleReact(userID, url) {
+export function handleReact(userID: string, url: string): void {
    insert.run(userID, url);
 }
-
-module.exports = {
-   handleReact,
-};

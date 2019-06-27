@@ -1,6 +1,8 @@
-const fs = require('fs');
-const request = require('request');
-const { bot } = require('./helper');
+import { statSync, createWriteStream } from 'fs';
+import request from 'request';
+import { TextChannel } from 'discord.js';
+import { bot } from './bot';
+
 /**
  * In a wonderful effort to defeat heroku's ephemeral filesystem and to never
  * touch a real database, this file has 2 functions, export and import
@@ -13,79 +15,71 @@ const { bot } = require('./helper');
  *
  */
 
-function downloadFile(url, fileName) {
-   return new Promise((resolve) => {
+function downloadFile(url: string, fileName: string): Promise<void> {
+   // you need to use `Request` to download anything, `Request promise native` can't.
+   // so we need to keep this promise
+   return new Promise((resolve): void => {
       request({
          uri: url,
          headers: {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36',
          },
-      }).pipe(fs.createWriteStream(fileName))
-         .on('finish', () => resolve());
+      }).pipe(createWriteStream(fileName))
+         .on('finish', (): void => resolve());
    });
 }
 
-function checkFileSize(fileName, fileSize) {
-   return new Promise((resolve, reject) => {
-      // this gets the fileSize of the file on disk
-      const fileSizeDisk = fs.statSync(fileName).size;
-      // check disk fileSize against discord's reported fileSize
-      return fileSizeDisk === fileSize ? resolve(true) : reject();
-   });
+export async function importFile(fileName: string): Promise<boolean> {
+   const path = fileName.match(/.*\/([^\\]+)\//);
+   if (path) {
+      throw new Error('Imported files should not contain filepaths.');
+   }
+   const channel = await bot.channels.get(process.env.dbChannel as string) as TextChannel;
+   if (!channel) {
+      throw new Error(`Unable to read channel: ${process.env.dbChannel}, Bad Permissions or incorrect env vars`);
+   }
+   const msgs = await channel.fetchMessages();
+   const file = msgs.find(m => !!(m.attachments.size && m.attachments.first().filename === fileName));
+   if (!file) {
+      throw new Error(`file: ${fileName} not found`);
+   }
+   await downloadFile(file.attachments.first().url, fileName);
+   console.log(`Imported file: ${fileName}`);
+   return (file.attachments.first().filesize === statSync(fileName).size);
 }
 
+export async function exportFile(fName: string, isArchive?: boolean): Promise<boolean> {
+   let fileName = fName;
+   // if the fileName contains a path, we remove the path and just get the fileName
+   const path = fileName.match(/.*\/([^\\]+)\//);
+   if (path) {
+      fileName = fileName.slice(path[0].length);
+   }
+   // get the channel and make sure its not undefined
+   const channel = await bot.channels.get(process.env.dbChannel as string) as TextChannel;
+   if (!channel) {
+      throw new Error(`Unable to read channel: ${process.env.dbChannel}, Bad Permissions or incorrect env vars`);
+   }
+   // if we are told to archive the file, we upload it without deleting the old version
+   if (isArchive) {
+      const archive = bot.channels.get(process.env.archiveChannel as string) as TextChannel;
+      if (archive) {
+         await archive.send({ files: [fileName] });
+         return true;
+      }
+      return false;
+   }
+   const msgs = await channel.fetchMessages();
+   const file = msgs.find(m => !!(m.attachments.size
+      && m.attachments.first().filename === fileName));
+   if (!file) {
+      throw new Error(`file: ${fileName} not found`);
+   }
 
-function importFile(fileName) {
-   return new Promise((resolve, reject) => {
-      bot.channels.get(process.env.database_channel).fetchMessages().then(async (msgs) => {
-         const file = msgs.find(m => m.attachments.size
-            && m.attachments.first().filename === fileName);
-         if (!file) {
-            return reject(new Error(`file: ${fileName} not found`));
-         }
-         await downloadFile(file.attachments.first().url, fileName);
-         const isFileGood = await checkFileSize(fileName, file.attachments.first().filesize);
-         console.log(`Imported file: ${fileName}`);
-         return isFileGood ? resolve(true) : reject();
-      });
-   });
+   // send the new file, so if something crashes the old file is still in the chan
+   await channel.send({ files: [fileName] });
+   // delete the old file
+   const oldMsg = await channel.fetchMessage(file.id);
+   oldMsg.delete();
+   return true;
 }
-
-function exportFile(fName, channel) {
-   return new Promise((resolve, reject) => {
-      bot.channels.get(process.env.database_channel).fetchMessages().then(async (msgs) => {
-         let fileName = fName;
-
-         // if the fileName contains a path, we remove the path and just get the fileName
-         const path = fileName.match(/.*\/([^\\]+)\//);
-         if (path) {
-            fileName = fileName.slice(path[0].length);
-         }
-
-         const file = msgs.find(m => m.attachments.size
-            && m.attachments.first().filename === fileName);
-         if (!file) {
-            return reject(new Error(`file: ${fileName} not found`));
-         }
-         // if we are told to archive the file, we upload it without deleting the old version
-         if (channel === 'archive') {
-            await bot.channels.get(process.env.archive_channel)
-               .send({ files: [fileName] });
-            return resolve();
-         }
-         // delete the old message after 2 seconds
-         await bot.channels.get(process.env.database_channel).fetchMessage(file.id)
-            .then(msg => msg.delete());
-
-         // wait until we send the new message with the file
-         await bot.channels.get(process.env.database_channel)
-            .send({ files: [fileName] });
-         return resolve();
-      });
-   });
-}
-
-module.exports = {
-   exportFile,
-   importFile,
-};

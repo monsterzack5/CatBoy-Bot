@@ -1,3 +1,5 @@
+import { Message } from 'discord.js';
+
 /**
  * The idea behind this antispam function is based off of:
  * https://github.com/Michael-J-Scofield/discord-anti-spam/
@@ -13,9 +15,9 @@
 const timeLimit = 1500;
 
 // Containers
-let messages = [];
+let messages: StoredMessage[] = [];
 
-function pushToMessages(message, command) {
+function pushToMessages(message: Message, command: string): void {
    messages.push({
       time: Date.now(),
       auth: message.author.id,
@@ -27,7 +29,7 @@ function pushToMessages(message, command) {
  * This function is only ever meant to get messages which the bot will do
  * something with.
  */
-function checkAntiSpam(message, command) {
+export function checkAntiSpam(message: Message, command: string): boolean {
    const oldMessage = messages.find(msg => msg.auth === message.author.id
       && msg.cmd === command);
 
@@ -52,7 +54,8 @@ function checkAntiSpam(message, command) {
    return true;
 }
 
-
-module.exports = {
-   checkAntiSpam,
-};
+interface StoredMessage {
+   time: number;
+   auth: string;
+   cmd: string;
+}

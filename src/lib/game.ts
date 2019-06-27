@@ -1,31 +1,31 @@
-/* eslint-disable prefer-destructuring */
-const fs = require('fs');
-const fileLoader = require('./tools/fileLoader');
-const { bot } = require('./tools/helper');
+import { Message } from 'discord.js';
+import { writeFileSync, readFileSync } from 'fs';
+import { exportFile } from './tools/fileLoader';
+import { bot } from './tools/bot';
 
 const gameStates = ['playing', 'watching', 'listening', 'streaming'];
 
-function updateConfig(config) {
-   if (config.game_url === '') {
-      bot.user.setActivity(config.game, { type: config.game_state });
-   } else bot.user.setActivity(config.game, { type: config.game_state, url: config.game_url });
-   fs.writeFileSync(`./${process.env.config_file}.json`, JSON.stringify(config, null, 2));
-   fileLoader.exportFile(`${process.env.config_file}.json`);
+function updateConfig(config: ConfigOptions): void {
+   if (config.gameUrl === '') {
+      bot.user.setActivity(config.game, { type: config.gameState });
+   } else bot.user.setActivity(config.game, { type: config.gameState, url: config.gameUrl });
+   writeFileSync(`./${process.env.configFile}.json`, JSON.stringify(config, null, 2));
+   exportFile(`${process.env.configFile}.json`);
 }
 
-module.exports.run = async (message, args) => {
-   const config = JSON.parse(fs.readFileSync(`./${process.env.config_file}.json`));
+export default (message: Message, args: string[]): void => {
+   const config: ConfigOptions = JSON.parse(readFileSync(`./${process.env.configFile}.json`).toString());
 
-   if (message.author.id !== process.env.bot_owner) {
+   if (message.author.id !== process.env.botOwner) {
       message.react('❌');
       return;
    }
 
    // if the command is just `!game`, we remove the game
    if (!args.length) {
-      config.game = '';
-      config.game_state = '';
-      config.game_url = '';
+      delete config.game;
+      delete config.gameState;
+      delete config.gameUrl;
       updateConfig(config);
       message.channel.send('Removed game!');
       console.log('changed game status');
@@ -34,13 +34,13 @@ module.exports.run = async (message, args) => {
 
    if (gameStates.includes(args[0].toLowerCase())) {
       // set the state
-      config.game_state = args.shift();
+      config.gameState = args.shift() as ConfigOptions['gameState'];
       // if twitch.tv was the second arg
       if (args[0].match(/twitch.tv/)) {
          // checks for if the url was in the correct format
          if (args[0].match(/^twitch?(.tv)?\/?/)) {
             // streaming stuff
-            config.game_url = `http://${args.shift()}`;
+            config.gameUrl = `http://${args.shift()}`;
             config.game = args.join(' ');
          } else {
             // warn for incorrect format
@@ -53,16 +53,24 @@ module.exports.run = async (message, args) => {
       }
    } else {
       // this is for the command format `!game hello world`
-      config.game_state = 'playing';
+      config.gameState = 'PLAYING';
       config.game = args.join(' ');
    }
    updateConfig(config);
-   message.channel.send(`Updated to ${config.game_state.toLowerCase()} ${config.game}`);
+   const state = config.gameState as string;
+   message.channel.send(`Updated to ${state.toLowerCase()} ${config.game}`);
    console.log('changed game status');
 };
 
 
-module.exports.help = {
+export const help = {
    name: 'game',
    help: '(game) or [listening] (audio) or [watching] (video) or [streaming] (twitch.url/url) (flavor text)',
 };
+
+interface ConfigOptions {
+   prefix: string;
+   gameUrl: string;
+   game: string;
+   gameState: 'PLAYING' | 'STREAMING' | 'LISTENING' | 'WATCHING' | undefined;
+}
