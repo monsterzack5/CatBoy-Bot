@@ -80,6 +80,6 @@ export async function exportFile(fName: string, isArchive?: boolean): Promise<bo
    await channel.send({ files: [fileName] });
    // delete the old file
    const oldMsg = await channel.fetchMessage(file.id);
-   oldMsg.delete();
+   await oldMsg.delete();
    return true;
 }
