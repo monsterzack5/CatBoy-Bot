@@ -17,11 +17,9 @@
       "request-promise-native": "^1.0.7"
    },
    "scripts": {
-      "info": "echo \"A quick note, all scripts below are ment to run on linux only.\" && exit 0",
-      "build": "tsc",
-      "postinstall": "npm run build",
+      "postinstall": "tsc",
       "dev": "export NODE_ENV=dev && node -r dotenv/config dist/index.js",
-      "start": "export NODE_ENV=production && node dist/index.js"
+      "prod": "export NODE_ENV=production && node -r dotenv/config dist/index.js"
    },
    "author": "Zach",
    "license": "MIT",
