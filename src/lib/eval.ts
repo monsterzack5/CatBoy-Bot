@@ -22,5 +22,4 @@ export default (message: Message, args: string[]): void => {
 
 export const help = {
    name: 'eval',
-   help: 'you can\'t use this',
 };

@@ -6,5 +6,5 @@ export default (message: Message, args: string[]): void => {
 
 export const help = {
    name: 'say',
-   help: 'echos a message',
+   help: 'Repeat after me :smile_cat:',
 };

@@ -52,5 +52,4 @@ export default (message: Message, args: string[]): void => {
 
 export const help = {
    name: 'config',
-   help: '[update] or [update4chan] or [dumb] or [dumb4chan]',
 };

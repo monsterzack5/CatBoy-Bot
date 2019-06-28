@@ -65,7 +65,6 @@ export default (message: Message, args: string[]): void => {
 
 export const help = {
    name: 'game',
-   help: '(game) or [listening] (audio) or [watching] (video) or [streaming] (twitch.url/url) (flavor text)',
 };
 
 interface ConfigOptions {

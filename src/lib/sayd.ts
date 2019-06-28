@@ -16,5 +16,5 @@ export default (message: Message, args: string[]): void => {
 
 export const help = {
    name: 'sayd',
-   help: 'echos a message, then deletes the original message',
+   help: 'Who said that? :smirk_cat:',
 };

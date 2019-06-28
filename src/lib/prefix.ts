@@ -17,7 +17,6 @@ export default (message: Message, args: string[]): void => {
    } else message.channel.send('Prefix can\'t be blank!');
 };
 
-module.exports.help = {
+export const help = {
    name: 'prefix',
-   help: 'used to change my prefix to whatever, !prefix always works if you forget the current prefix',
 };

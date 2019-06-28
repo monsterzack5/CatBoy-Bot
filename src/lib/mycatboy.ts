@@ -24,5 +24,5 @@ export default async (message: Message): Promise<void> => {
 
 export const help = {
    name: 'mycatboy',
-   help: 'sends your own personal catboy',
+   help: 'Sends your own personal catboy :kissing_cat:',
 };

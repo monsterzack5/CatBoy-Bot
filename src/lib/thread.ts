@@ -21,5 +21,5 @@ export default (message: Message): void => {
 
 export const help = {
    name: 'thread',
-   help: 'returns the current 4chan thread(s)',
+   // help: 'returns the current 4chan thread(s)',
 };

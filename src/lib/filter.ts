@@ -1,7 +1,7 @@
 import { Message } from 'discord.js';
 import { db } from './tools/db';
 
-const insertFilter = db.get().prepare('INSERT INTO filtered VALUES (?, ?)');
+const insertFilter = db.get().prepare('INSERT INTO filtered (id, source) VALUES (?, ?)');
 
 const searchBing = db.get().prepare('SELECT * FROM bingcats WHERE id = ?');
 const searchChan = db.get().prepare('SELECT * FROM chancats WHERE no = ?');
@@ -64,5 +64,4 @@ export default async (message: Message, args: string[]): Promise<void> => {
 
 export const help = {
    name: 'filter',
-   help: 'adsfasdfasdfasdf',
 };

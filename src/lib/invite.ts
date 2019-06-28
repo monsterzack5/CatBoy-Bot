@@ -6,5 +6,5 @@ export default (message: Message): void => {
 
 export const help = {
    name: 'invite',
-   help: 'sends my invite link',
+   help: 'to get my invite link :smiley_cat:',
 };

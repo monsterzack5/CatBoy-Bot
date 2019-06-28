@@ -125,7 +125,7 @@ export default async (message: Message): Promise<void> => {
 
 export const help = {
    name: 'catboy',
-   help: 'Catboys make the rockin world go round',
+   help: 'Sends a random catboy :cat:',
 };
 
 interface Reply {
