@@ -17,6 +17,7 @@ class Database {
             this.options = { verbose: console.log };
          }
          database = new Sqlite(`./${process.env.dbFile}.db`, this.options);
+         database.pragma('journal_mode = WAL');
       }
       return true;
    }
