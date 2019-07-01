@@ -3,7 +3,7 @@ import {
    db,
    insertBing,
    deleteBingById,
-   searchFiltered,
+   searchFilteredBySource,
 } from './db';
 
 const insertImagesRemoveFiltered = db.transaction((images, badImages): void => {
@@ -124,7 +124,7 @@ export async function updateBing(): Promise<void> {
    const dataFiltered: BingImage[] = removeFiltered(dataLite);
 
    try {
-      const badImages = searchFiltered.all('bing');
+      const badImages = searchFilteredBySource.all('bing');
       insertImagesRemoveFiltered(dataFiltered, badImages);
    } catch (e) {
       console.error(`Error! Failed to update the bing cats!\n${e}`);

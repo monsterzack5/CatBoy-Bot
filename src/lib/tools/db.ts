@@ -29,7 +29,9 @@ class Database {
 
    public searchReportsByUrl!: Sqlite.Statement;
 
-   public searchFiltered!: Sqlite.Statement;
+   public searchFilteredBySource!: Sqlite.Statement;
+
+   public searchFilteredById!: Sqlite.Statement;
 
    public searchFavorite!: Sqlite.Statement;
 
@@ -62,7 +64,8 @@ class Database {
          this.searchBingById = database.prepare('SELECT * FROM bingcats WHERE id = ?');
          this.searchChanByNo = database.prepare('SELECT * FROM chancats WHERE no = ?');
          this.searchReportsByUrl = database.prepare('SELECT * FROM reports WHERE url = ?');
-         this.searchFiltered = database.prepare('SELECT * FROM filtered WHERE source = ?');
+         this.searchFilteredBySource = database.prepare('SELECT * FROM filtered WHERE source = ?');
+         this.searchFilteredById = database.prepare('SELECT * FROM filtered WHERE id = ?');
          this.searchFavorite = database.prepare('SELECT url FROM favorites WHERE uid = ?');
          this.searchThreads = database.prepare('SELECT * FROM threads');
          this.deleteChanByNo = database.prepare('DELETE FROM chancats WHERE no = ?');
@@ -83,7 +86,8 @@ export const {
    searchBingById,
    searchChanByNo,
    searchReportsByUrl,
-   searchFiltered,
+   searchFilteredBySource,
+   searchFilteredById,
    searchFavorite,
    searchThreads,
    deleteChanByNo,

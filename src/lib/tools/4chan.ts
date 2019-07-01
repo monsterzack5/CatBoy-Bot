@@ -4,14 +4,14 @@ import {
    insertChan,
    insertThread,
    deleteChanByNo,
-   searchFiltered,
+   searchFilteredBySource,
 } from './db';
 
 // const insertImages = db.prepare('INSERT OR REPLACE INTO chancats (no, ext) VALUES(?, ?)');
 // const insertThread = db.prepare('INSERT OR REPLACE INTO threads (id, no) VALUES(?, ?)');
 
 // const deleteChan = db.prepare('DELETE FROM chancats WHERE no = ?');
-// const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'chan\'');
+// const searchFilteredBySource = db.prepare('SELECT * FROM filtered WHERE source = \'chan\'');
 
 
 const insertImagesRemoveFiltered = db.transaction((images: ChanImage[], badImages): void => {
@@ -107,7 +107,7 @@ export async function updateChan(): Promise<void> {
    }
 
    try {
-      const badPosts = searchFiltered.all('chan');
+      const badPosts = searchFilteredBySource.all('chan');
       insertImagesRemoveFiltered(imgLinks, badPosts);
    } catch (e) {
       console.error(`Error! Failed to update the 4chan cats!\n${e}`);

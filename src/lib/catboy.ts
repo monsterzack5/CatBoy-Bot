@@ -2,7 +2,7 @@ import { search as booru } from 'booru';
 import SearchResults from 'booru/dist/structures/SearchResults';
 import randomColor from 'randomcolor';
 import { Message } from 'discord.js';
-import { db } from './tools/db';
+import { db, searchFilteredById } from './tools/db';
 
 // these statements are _all_ unique to this file,
 // and wont be recreated in the db class
@@ -85,9 +85,17 @@ async function booruCat(message: Message): Promise<Reply> {
          limit: 1,
          random: true,
       });
+
       if (!cat[0].fileUrl) {
          throw new Error('Booru cat returned undefined fileUrl');
       }
+
+      // check if this catboy is filtered, if so return function recursively
+      const isFiltered = searchFilteredById.get(cat);
+      if (isFiltered) {
+         return booruCat(message);
+      }
+
       reply = await embedBuilder(cat[0].source, cat[0].fileUrl) as Reply;
    } catch (err) {
       message.react('⁉');

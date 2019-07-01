@@ -30,7 +30,9 @@ export function handleFilter(url: string, msg: Message): void {
       msg.react('🇫');
       return;
    }
-   msg.react('⁉');
+   // we're here if its a booru cat
+   insertFilter.run(url, 'booru');
+   msg.react('🇫');
 }
 
 export function handleReport(url: string, msg: Message): void {
