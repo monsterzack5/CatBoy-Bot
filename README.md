@@ -18,4 +18,6 @@ The bot has a built in anti-spam timer of 1.5 seconds.
 to run this bot, populate the `.env.example`, rename it to just `.env`, then run `npm run config`, then run `npm run makedb`
 note: this will only make the production files, if you wanna use `npm run dev` you'll need to make a copy of the db and config files. Then rename them to whatever your dev names are, and send them manually to your db channel.
 
+oh yeah also, if you are ever gonna use this bot, change line 42 in `index.ts` to your own heroku url. Change `src/lib/support + invite` to your own details.
+
 this bot isnt meant to be used by anyone but me.
