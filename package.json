@@ -19,12 +19,15 @@
    "scripts": {
       "postinstall": "tsc",
       "dev": "export NODE_ENV=dev && node -r dotenv/config dist/index.js",
-      "prod": "export NODE_ENV=production && node -r dotenv/config dist/index.js"
+      "prod": "export NODE_ENV=production && node -r dotenv/config dist/index.js",
+      "config": "node dist/scripts/heroku_config.js",
+      "makedb": "node -r dotenv/config dist/scripts/gen_config.js"
    },
    "author": "Zach",
    "license": "MIT",
    "devDependencies": {
       "@types/better-sqlite3": "^5.4.0",
+      "@types/dotenv": "^6.1.1",
       "@types/node": "^12.0.10",
       "@types/node-cron": "^2.0.2",
       "@types/node-fetch": "^2.3.7",
