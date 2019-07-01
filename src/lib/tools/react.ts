@@ -39,7 +39,6 @@ export function handleFilter(url: string, msg: Message): void {
 export function handleReport(url: string, msg: Message): void {
    // todo, one day we should add the reports to the bingcats or chancats db, no seperate table
    const isReported = searchReports.get(url);
-   console.log(`hello! ${JSON.stringify(isReported, null, 2)}`);
    if (isReported) {
       // todo: remove our own reaction
       let numPlusOne = isReported.num;
@@ -48,7 +47,7 @@ export function handleReport(url: string, msg: Message): void {
       msg.react('😾');
       return;
    }
-   const source = url.startsWith('https://i.4cdn.org/cm/') ? 'chan' : 'bing';
+   const source = url.startsWith('https://i.4cdn.org/cm/') ? 'chan' : 'bing or booru';
    insertFirstReport.run(url, source);
    msg.react('😾');
 }

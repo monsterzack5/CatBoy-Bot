@@ -113,13 +113,13 @@ async function bingCat(): Promise<Reply> {
 
 export default async (message: Message): Promise<void> => {
    // picks a random number between 0 and X-1
-   const randomSearch = Math.floor(Math.random() * 55);
+   const randomSearch = Math.floor(Math.random() * 50);
    let reply: Reply = {};
 
    // 0-3 for boorus, 4 to 10 for 4chan, 11 and up for bing
-   if (randomSearch < 4) reply = await booruCat(message);
-   if (randomSearch > 3 && randomSearch < 11) reply = await chanCat();
-   if (randomSearch > 10) reply = await bingCat();
+   if (randomSearch < 10) reply = await booruCat(message);
+   if (randomSearch > 9 && randomSearch < 25) reply = await chanCat();
+   if (randomSearch > 24) reply = await bingCat();
    message.channel.send(reply);
 };
 
