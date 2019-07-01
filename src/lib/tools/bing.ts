@@ -36,67 +36,62 @@ const filteredWebsites = [
    /usafdrumcorps.us/i,
 ];
 
-function getJSON(url: string): Promise<ReturnedJSON> {
-   return new Promise((resolve, reject): void => {
-      request({
+async function getJSON(url: string): Promise<ReturnedJSON | void> {
+   try {
+      const req = await request({
          uri: url,
          headers: {
             'User-Agent': 'com.zhiliaoapp.musically/2019031132 (Linux; U; Android 9; en_US; Pixel 2 XL; Build/PQ2A.190305.002; Cronet/58.0.2991.0)',
             'Ocp-Apim-Subscription-Key': process.env.bingToken,
          },
          json: true,
-      })
-         .then((data): void => {
-            resolve(data);
-         })
-         .catch((err): void => {
-            reject(err);
-         });
-   });
+      });
+      return req;
+   } catch (e) {
+      return console.error(`Error Getting bing JSON:\n${e}`);
+   }
 }
 
 // bing doesn't like their api spammed and will return 4XX errors
 // for more than 3 calls a second (on a free plan)
-function sleep(timeMs: number): Promise<void> {
-   return new Promise(resolve => setTimeout(resolve, timeMs));
+async function sleep(timeMs: number): Promise<void> {
+   await setTimeout(() => { }, timeMs);
 }
 
 // recursive function to use Bing's API
-function getImages(inputJSON: ReturnedJSON[] = [], offset = 0, termNum = 0,
+async function getImages(inputJSON: ReturnedJSON[] = [], offset = 0, termNum = 0,
    totalItems = searchTerms[0].limit): Promise<ReturnedJSON[]> {
-   return new Promise(async (resolve): Promise<void> => {
-      // what's the point of eslint(no-param-reassign) ????
-      let json = inputJSON;
-      let term = termNum;
-      let total = totalItems;
+   // what's the point of eslint(no-param-reassign) ????
+   let json = inputJSON;
+   let term = termNum;
+   let total = totalItems;
 
-      // most searches return much less than however much you set count to
-      const count = 400;
-      const url = `https://api.cognitive.microsoft.com/bing/v7.0/images/search?q=${searchTerms[term].q}&count=${count}&offset=${offset}&mkt=en-us&safeSearch=Moderate`;
-      const newJSON = await getJSON(url);
-      await sleep(500);
-      // add the new responces to `json`
-      json = json.concat(newJSON.value);
+   // most searches return much less than however much you set count to
+   const count = 400;
+   const url = `https://api.cognitive.microsoft.com/bing/v7.0/images/search?q=${searchTerms[term].q}&count=${count}&offset=${offset}&mkt=en-us&safeSearch=Moderate`;
+   const newJSON = await getJSON(url) as ReturnedJSON;
+   await sleep(500);
+   // add the new responces to `json`
+   json = json.concat(newJSON.value);
 
-      // call this function recursively till we get the limit specified
-      if (json.length < total) {
-         return resolve(getImages(json, newJSON.nextOffset, term, total));
-      }
-      // sometimes bing likes to give us like 100 images over the total we want
-      json = json.slice(0, total);
+   // call this function recursively till we get the limit specified
+   if (json.length < total) {
+      return getImages(json, newJSON.nextOffset, term, total);
+   }
+   // sometimes bing likes to give us like 100 images over the total we want
+   json = json.slice(0, total);
 
-      // if we have more than 280 images, and we're on a term thats not the last one
-      // we call the function again, increasing the term we're on
-      // we use searchTerms[term + 1] to check if the next term is going to be undefined
-      // and skip the if it is
-      if (term < searchTerms.length && searchTerms[term + 1]) {
-         term += 1;
-         total += searchTerms[term].limit;
-         // we set the offset back to 0 when switching to the next term.
-         return resolve(getImages(json, 0, term, total));
-      }
-      return resolve(json);
-   });
+   // if we have more than 280 images, and we're on a term thats not the last one
+   // we call the function again, increasing the term we're on
+   // we use searchTerms[term + 1] to check if the next term is going to be undefined
+   // and skip the if it is
+   if (term < searchTerms.length && searchTerms[term + 1]) {
+      term += 1;
+      total += searchTerms[term].limit;
+      // we set the offset back to 0 when switching to the next term.
+      return getImages(json, 0, term, total);
+   }
+   return json;
 }
 
 function removeFiltered(json: BingImage[]): BingImage[] {
