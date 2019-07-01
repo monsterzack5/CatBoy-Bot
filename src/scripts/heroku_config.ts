@@ -1,26 +1,24 @@
-'use strict';
+import { execSync, ExecSyncOptions } from 'child_process';
+// eslint-disable-next-line
+import { DotenvParseOutput } from 'dotenv';
 
-const shell = require('child_process');
-let output;
-
-try {
-   const keys = require('dotenv').config();
-   if (keys.error) {
-      throw keys.error;
+const options: ExecSyncOptions = { stdio: 'inherit' };
+async function main(): Promise<void> {
+   try {
+      const dotenv = await import('dotenv');
+      const parsedKeys = dotenv.config().parsed as DotenvParseOutput;
+      const keys = Object.entries(parsedKeys);
+      if (keys.length !== 10) {
+         console.log('Error! No keys found in the local .env file');
+         process.exit(1);
+      }
+      for (const [key, value] of keys) {
+         execSync(`heroku config:set ${key}=${value}`, options);
+      }
+   } catch (e) {
+      console.error('Error! Did you forget to run "yarn" or "npm install"?\n');
+      console.log(`${e}`);
+      process.exit(0);
    }
-   for (let key in keys.parsed) {
-      console.log(`Setting key:${key} with var: ${keys.parsed[key]}`);
-      output = shell.exec(`heroku config:set ${key}=${keys.parsed[key]}`);
-   }
-} catch (e) {
-   console.error('Error! Did you forget to run "yarn" or "npm install"?\n');
-   console.log(`${e}`);
-   process.exit(0);
 }
-
-output.stdout.on('data', (data) => {
-   console.log(`info: ${data.toString()}`);
-});
-output.stderr.on('data', (data) => {
-   console.log(`ERROR!: ${data.toString()}`);
-});
+main();

@@ -1,41 +1,47 @@
-'use strict';
-////////////////////////////////////////////////////////
+import Discord, { TextChannel } from 'discord.js';
+import { writeFileSync } from 'fs';
+import Sqlite from 'better-sqlite3';
+
+// //////////////////////////////////////////////////////
 // Feel free to edit these values directly in the script
-const prefix = '!';
-////////////////////////////////////////////////////////
+// prefix is the prefix of the devbot
+const prefix = '+';
+// //////////////////////////////////////////////////////
 
+const mainbot = new Discord.Client();
+mainbot.login(process.env.discordToken);
 
-const config = {
-   game: '',
-   game_state: '',
-   game_url: '',
-   prefix: prefix
+function initDb(): void {
+   const db = new Sqlite(`./${process.env.dbFile}.db`, { verbose: console.log });
+   db.exec('CREATE TABLE IF NOT EXISTS bingcats (id TEXT PRIMARY KEY, url TEXT NOT NULL) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS chancats (no TEXT PRIMARY KEY, ext TEXT NOT NULL) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS favorites (uid TEXT PRIMARY KEY, url TEXT NOT NULL) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS filtered (id TEXT PRIMARY KEY, source TEXT NOT NULL) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS threads (id INTEGER PRIMARY KEY, no TEXT NOT NULL) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS reports (url TEXT PRIMARY KEY, num INTEGER NOT NULL, source TEXT NOT NULL) WITHOUT ROWID');
+   db.close();
 }
+initDb();
 
-let bot, fs;
-try {
-   require('dotenv').config();
-   const Discord = require('discord.js');
-   fs = require('fs');
-   bot = new Discord.Client();
-   bot.login(process.env.discordtoken || process.env.discordtoken_dev);
-} catch (e) {
-   console.log(`Error! Did you setup your .env file and run "node scripts/heroku_config"?\n${e}`);
-   process.edit(1);
-}
-
-bot.on('ready', async () => {
+mainbot.on('ready', async () => {
+   const config = {
+      game: '',
+      gameState: '',
+      gameUrl: '',
+      prefix,
+   };
    try {
-      fs.writeFileSync(`./${process.env.config_file}.json`, JSON.stringify(config, null, 2));
-      await bot.channels.get(process.env.database_channel).send({
-         files: [`${process.env.config_file}.json`]
+      writeFileSync(`./${process.env.configFile}.json`, JSON.stringify(config));
+      const dbChan = await mainbot.channels.get((process.env.dbChannel as string)) as TextChannel;
+      await dbChan.send({
+         files: [`${process.env.configFile}.json`, `${process.env.dbFile}.db`],
       });
-      console.log('Exported the config to your db channel! The bot is ready to be run with npm run dev or npm start');
-      process.exit(1);
+      console.log('Exported the config to your db channel! The bot is ready to be run with npm start\n DONT FORGET TO RUN `!config updatebing` AND `!config update4chan` immediately after boot!');
+      process.exit(0);
    } catch (e) {
       console.error(`Error! failed to export config to your log channel.
         Did you setup your .env right?
-        Does the bot account have write access to the discord channel?\n${e}`)
+        Does the bot account have write access to the discord channel?\n${e}`);
       process.exit(1);
    }
 });
