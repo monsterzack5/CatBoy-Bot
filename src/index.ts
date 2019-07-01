@@ -6,12 +6,13 @@ import request from 'request-promise-native';
 import http from 'http';
 import { Message, TextChannel } from 'discord.js';
 import { schedule } from 'node-cron';
+import { Database } from 'better-sqlite3';
+
 
 import { checkAntiSpam } from './lib/tools/antispam';
 import { importFile, exportFile } from './lib/tools/fileLoader';
 import { bot } from './lib/tools/bot';
 import { checkRequired } from './lib/tools/required';
-import { db } from './lib/tools/db';
 
 if (!checkRequired()) throw new Error('Error! Enviorment Variables not set!');
 
@@ -20,6 +21,7 @@ let handleFavorite: (userID: string, url: string) => void;
 let handleFilter: (url: string, msg: Message) => void;
 let handleReport: (url: string, msg: Message) => void;
 let updateChan: () => void;
+let db: Database;
 // let updateBing: () => void;
 
 const commands = new Map();
@@ -63,9 +65,7 @@ bot.on('ready', async (): Promise<void> => {
       process.exit(1);
    }
 
-   // only load everything else
-   db.initDb();
-
+   ({ db } = await import('./lib/tools/db'));
    ({ handleFavorite, handleFilter, handleReport } = await import('./lib/tools/react'));
    ({ updateChan } = await import('./lib/tools/4chan'));
    // ({ updateBing } = await import('./lib/tools/bing'));
@@ -178,7 +178,7 @@ schedule('*/5 * * * *', async (): Promise<void> => {
    }
    await updateChan();
    try {
-      await db.get().backup(`./tmp/${process.env.dbFile}.db`);
+      await db.backup(`./tmp/${process.env.dbFile}.db`);
    } catch (e) {
       console.error(`Error! Failed to backup the db!\n${e} `);
    }

@@ -4,15 +4,17 @@ import randomColor from 'randomcolor';
 import { Message } from 'discord.js';
 import { db } from './tools/db';
 
+// these statements are _all_ unique to this file,
+// and wont be recreated in the db class
 
 // these statements get the length of the DB
-const bCount = db.get().prepare('SELECT COUNT(*) FROM bingcats');
-const cCount = db.get().prepare('SELECT COUNT(*) FROM chancats');
+const bCount = db.prepare('SELECT COUNT(*) FROM bingcats');
+const cCount = db.prepare('SELECT COUNT(*) FROM chancats');
 
 // these statements take a random number, and use it as the offset
 // to select a random cat
-const searchBing = db.get().prepare('SELECT * FROM bingcats LIMIT 1 OFFSET ?');
-const searchChan = db.get().prepare('SELECT * FROM chancats LIMIT 1 OFFSET ?');
+const searchBing = db.prepare('SELECT * FROM bingcats LIMIT 1 OFFSET ?');
+const searchChan = db.prepare('SELECT * FROM chancats LIMIT 1 OFFSET ?');
 
 // these vars hold the total items of both tables
 let bingCount = bCount.get()['COUNT(*)'];
@@ -23,7 +25,7 @@ setInterval(() => {
    console.log('updating count in db');
    bingCount = bCount.get()['COUNT(*)'];
    chanCount = cCount.get()['COUNT(*)'];
-}, 600000);
+}, 630000);
 
 const sfwSites = [
    {

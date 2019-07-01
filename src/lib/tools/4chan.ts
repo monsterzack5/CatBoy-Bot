@@ -1,21 +1,27 @@
 import request from 'request-promise-native';
-import { db } from './db';
+import {
+   db,
+   insertChan,
+   insertThread,
+   deleteChanByNo,
+   searchFiltered,
+} from './db';
 
-const insertImages = db.get().prepare('INSERT OR REPLACE INTO chancats (no, ext) VALUES(?, ?)');
-const insertThread = db.get().prepare('INSERT OR REPLACE INTO threads (id, no) VALUES(?, ?)');
+// const insertImages = db.prepare('INSERT OR REPLACE INTO chancats (no, ext) VALUES(?, ?)');
+// const insertThread = db.prepare('INSERT OR REPLACE INTO threads (id, no) VALUES(?, ?)');
 
-const deleteChan = db.get().prepare('DELETE FROM chancats WHERE no = ?');
-const searchFiltered = db.get().prepare('SELECT * FROM filtered WHERE source = \'chan\'');
+// const deleteChan = db.prepare('DELETE FROM chancats WHERE no = ?');
+// const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'chan\'');
 
 
-const insertImagesRemoveFiltered = db.get().transaction((images, badImages): void => {
+const insertImagesRemoveFiltered = db.transaction((images: ChanImage[], badImages): void => {
    for (const image of images) {
       // since `no` are number literals, sqlite will
       // read them as `XXXXXXX.0` without .toString
-      insertImages.run(image.no.toString(), image.ext);
+      insertChan.run(image.no.toString(), image.ext);
    }
    for (const post of badImages) {
-      deleteChan.run(post.id);
+      deleteChanByNo.run(post.id);
    }
 });
 
@@ -106,7 +112,7 @@ export function updateChan(): Promise<void> {
       }
 
       try {
-         const badPosts = searchFiltered.all();
+         const badPosts = searchFiltered.all('chan');
          insertImagesRemoveFiltered(imgLinks, badPosts);
       } catch (e) {
          console.error(`Error! Failed to update the 4chan cats!\n${e}`);
