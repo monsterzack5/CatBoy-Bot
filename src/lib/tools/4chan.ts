@@ -7,13 +7,6 @@ import {
    searchFilteredBySource,
 } from './db';
 
-// const insertImages = db.prepare('INSERT OR REPLACE INTO chancats (no, ext) VALUES(?, ?)');
-// const insertThread = db.prepare('INSERT OR REPLACE INTO threads (id, no) VALUES(?, ?)');
-
-// const deleteChan = db.prepare('DELETE FROM chancats WHERE no = ?');
-// const searchFilteredBySource = db.prepare('SELECT * FROM filtered WHERE source = \'chan\'');
-
-
 const insertImagesRemoveFiltered = db.transaction((images: ChanImage[], badImages): void => {
    for (const image of images) {
       // since `no` are number literals, sqlite will
