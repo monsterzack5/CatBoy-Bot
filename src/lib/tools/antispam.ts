@@ -1,5 +1,5 @@
 import { readdirSync } from 'fs';
-import { Message } from 'discord.js';
+import { StoredMessage, LookUpTable, Command } from '../../../typings/interfaces';
 
 /**
  * The idea behind this antispam function is based off of:
@@ -70,23 +70,4 @@ export function checkAntiSpam(msgAuthorId: string, command: string): boolean {
    console.log(`message is spam, timelimit: ${lookUpTable[command]}`);
    // we return true because the message is spam
    return true;
-}
-
-interface StoredMessage {
-   time: number;
-   auth: string;
-   cmd: string;
-}
-
-interface Command {
-   default(message: Message, args: string[]): void;
-   help: {
-      name: string;
-      help?: string;
-      timeout?: number;
-   };
-}
-
-interface LookUpTable {
-   [index: string]: number;
 }

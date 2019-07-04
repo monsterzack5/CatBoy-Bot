@@ -3,6 +3,7 @@ import SearchResults from 'booru/dist/structures/SearchResults';
 import randomColor from 'randomcolor';
 import { Message } from 'discord.js';
 import { db } from './tools/db';
+import { DiscordEmbedReply } from '../../typings/interfaces';
 
 
 // these statements get the length of the DB
@@ -55,7 +56,7 @@ const sfwSites = [
 ];
 const sitesLen = sfwSites.length;
 
-function embedBuilder(source: string | undefined, url: string): Reply {
+function embedBuilder(source: string | undefined, url: string): DiscordEmbedReply {
    const color = parseInt((randomColor() as string).substring(1), 16);
    let description: string;
 
@@ -75,10 +76,10 @@ function embedBuilder(source: string | undefined, url: string): Reply {
 }
 
 
-async function booruCat(message: Message): Promise<Reply> {
+async function booruCat(message: Message): Promise<DiscordEmbedReply> {
    const randomNum = Math.floor(Math.random() * sitesLen);
    let cat: SearchResults;
-   let reply: Reply = {};
+   let reply: DiscordEmbedReply = {};
 
    try {
       cat = await booru(sfwSites[randomNum].site, sfwSites[randomNum].search, {
@@ -97,7 +98,7 @@ async function booruCat(message: Message): Promise<Reply> {
          return booruCat(message);
       }
 
-      reply = await embedBuilder(cat[0].source, cat[0].fileUrl) as Reply;
+      reply = await embedBuilder(cat[0].source, cat[0].fileUrl) as DiscordEmbedReply;
    } catch (err) {
       message.react('⁉');
       console.error(err);
@@ -105,7 +106,7 @@ async function booruCat(message: Message): Promise<Reply> {
    return reply;
 }
 
-async function chanCat(): Promise<Reply> {
+async function chanCat(): Promise<DiscordEmbedReply> {
    const random = Math.floor(Math.random() * chanCount);
    const cat = searchChan.get(random);
    const url = `https://i.4cdn.org/cm/${cat.no}${cat.ext}`;
@@ -113,7 +114,7 @@ async function chanCat(): Promise<Reply> {
    return reply;
 }
 
-async function bingCat(): Promise<Reply> {
+async function bingCat(): Promise<DiscordEmbedReply> {
    const random = Math.floor(Math.random() * bingCount);
    const cat = searchBing.get(random);
    const source = `https://www.bing.com/images/search?view=detailv2&id=${cat.id}`;
@@ -126,7 +127,7 @@ export default async (message: Message): Promise<void> => {
    // picks a random number between 0 and X-1
    // const randomSearch = Math.floor(Math.random() * 50);
    const randomSearch = 5;
-   let reply: Reply = {};
+   let reply: DiscordEmbedReply = {};
 
    // 0-3 for boorus, 4 to 10 for 4chan, 11 and up for bing
    if (randomSearch < 10) reply = await booruCat(message);
@@ -140,13 +141,3 @@ export const help = {
    help: 'Sends a random catboy :cat:',
    timeout: 1000,
 };
-
-interface Reply {
-   embed?: {
-      color: number;
-      description: string;
-      image: {
-         url: string;
-      };
-   };
-}

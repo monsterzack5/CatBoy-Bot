@@ -2,6 +2,7 @@ import { Message } from 'discord.js';
 import { writeFileSync, readFileSync } from 'fs';
 import { exportFile } from './tools/fileLoader';
 import { bot } from './tools/bot';
+import { ConfigOptions } from '../../typings/interfaces';
 
 const gameStates = ['playing', 'watching', 'listening', 'streaming'];
 
@@ -66,10 +67,3 @@ export default (message: Message, args: string[]): void => {
 export const help = {
    name: 'game',
 };
-
-interface ConfigOptions {
-   prefix: string;
-   gameUrl: string;
-   game: string;
-   gameState: 'PLAYING' | 'STREAMING' | 'LISTENING' | 'WATCHING' | undefined;
-}

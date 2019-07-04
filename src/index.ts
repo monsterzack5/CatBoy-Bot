@@ -12,6 +12,9 @@ import { checkAntiSpam } from './lib/tools/antispam';
 import { importFile, exportFile } from './lib/tools/fileLoader';
 import { bot } from './lib/tools/bot';
 import { checkRequired } from './lib/tools/required';
+import {
+   ConfigOptions, RawReactData, Command, DiscordEmbedReply,
+} from '../typings/interfaces';
 
 if (!checkRequired()) throw new Error('Error! Enviorment Variables not set!');
 
@@ -24,7 +27,7 @@ let db: Database;
 // let updateBing: () => void;
 
 const commands = new Map();
-let commandsEmbed: Embed = {};
+let commandsEmbed: DiscordEmbedReply = {};
 
 // do different things in dev vs prod mode
 if (process.env.NODE_ENV === 'dev') {
@@ -189,43 +192,3 @@ schedule('*/5 * * * *', async (): Promise<void> => {
 // schedule('0 13 * * *', (): void => {
 //    updateBing();
 // });
-
-interface Command {
-   default(message: Message, args: string[]): void;
-   help: {
-      name: string;
-      help: string;
-   };
-}
-
-interface ConfigOptions {
-   prefix: string;
-   gameUrl: string;
-   game: string;
-   gameState: 'PLAYING' | 'STREAMING' | 'LISTENING' | 'WATCHING' | undefined;
-}
-
-interface RawReactData {
-   t: string;
-   s: number;
-   op: number;
-   d: {
-      user_id: string;
-      message_id: string;
-      guild_id: string;
-      channel_id: string;
-      emoji: {
-         name: string;
-         id: string | null;
-         animated: boolean;
-      };
-   };
-}
-
-interface Embed {
-   embed?: {
-      title: string;
-      description: string;
-      color: number;
-   };
-}

@@ -1,5 +1,8 @@
 import request from 'request-promise-native';
 import { db } from './db';
+import {
+   ChanImage, Post, ImagePost, CatalogPage, ThreadResponse,
+} from '../../../typings/interfaces';
 
 const insertImages = db.prepare('INSERT OR REPLACE INTO chancats (no, ext) VALUES(?, ?)');
 const insertThread = db.prepare('INSERT OR REPLACE INTO threads (id, no) VALUES(?, ?)');
@@ -106,36 +109,4 @@ export async function updateChan(): Promise<void> {
    } catch (e) {
       console.error(`Error! Failed to update the 4chan cats!\n${e}`);
    }
-}
-
-interface ChanImage {
-   ext: string;
-   no: number;
-}
-
-interface Post {
-   tim?: number;
-   ext?: string;
-   no: number;
-   sub: string;
-   com: string;
-   filename: string;
-}
-
-interface ImagePost {
-   tim: number;
-   ext: string;
-   no: number;
-   sub: string;
-   com: string;
-   filename: string;
-}
-
-interface CatalogPage {
-   threads: ImagePost[];
-   page: number;
-}
-
-interface ThreadResponse extends Post {
-   posts: Post[];
 }

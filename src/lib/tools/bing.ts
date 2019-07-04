@@ -1,5 +1,6 @@
 import request from 'request-promise-native';
 import { db } from './db';
+import { ReturnedJSON, BingImage } from '../../../typings/interfaces';
 
 const insertBing = db.prepare('INSERT OR REPLACE INTO bingcats (id, url) VALUES (?, ?)');
 const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'bing\'');
@@ -129,16 +130,4 @@ export async function updateBing(): Promise<void> {
       console.error(`Error! Failed to update the bing cats!\n${e}`);
    }
    return Promise.resolve();
-}
-
-interface ReturnedJSON {
-   value: ReturnedJSON[];
-   nextOffset: number;
-   contentUrl: string;
-   imageId: string;
-}
-
-interface BingImage {
-   url: string;
-   id: string;
 }
