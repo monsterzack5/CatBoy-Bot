@@ -2,7 +2,7 @@ import request from 'request-promise-native';
 import { db } from './db';
 import {
    ChanImage, Post, ImagePost, CatalogPage, ThreadResponse,
-} from '../../typings/interfaces';
+} from '../typings/interfaces';
 
 const insertImages = db.prepare('INSERT OR REPLACE INTO chancats (no, ext) VALUES(?, ?)');
 const insertThread = db.prepare('INSERT OR REPLACE INTO threads (id, no) VALUES(?, ?)');

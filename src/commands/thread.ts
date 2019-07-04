@@ -1,5 +1,5 @@
 import { Message } from 'discord.js';
-import { db } from './tools/db';
+import { db } from '../utils/db';
 
 const search = db.prepare('SELECT * FROM threads');
 

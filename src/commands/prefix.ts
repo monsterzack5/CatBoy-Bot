@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { Message } from 'discord.js';
-import { exportFile } from './tools/fileLoader';
+import { exportFile } from '../utils/fileLoader';
 
 export default (message: Message, args: string[]): void => {
    if (message.author.id !== process.env.botOwner) {

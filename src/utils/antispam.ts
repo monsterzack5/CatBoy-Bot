@@ -1,4 +1,4 @@
-import { StoredMessage, LookUpTable } from '../../typings/interfaces';
+import { StoredMessage, LookUpTable } from '../typings/interfaces';
 import { createTimeOutTable } from './commandhandler';
 
 // Variables

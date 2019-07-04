@@ -1,7 +1,7 @@
 import { Message } from 'discord.js';
-import { exportFile } from './tools/fileLoader';
-import { updateChan } from './tools/4chan';
-import { updateBing } from './tools/bing';
+import { exportFile } from '../utils/fileLoader';
+import { updateChan } from '../utils/4chan';
+import { updateBing } from '../utils/bing';
 
 export default (message: Message, args: string[]): void => {
    if (message.author.id !== process.env.botOwner || !args.length) {

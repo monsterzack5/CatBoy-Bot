@@ -2,7 +2,7 @@ import { search as booru } from 'booru';
 import SearchResults from 'booru/dist/structures/SearchResults';
 import randomColor from 'randomcolor';
 import { Message } from 'discord.js';
-import { db } from './tools/db';
+import { db } from '../utils/db';
 import { DiscordEmbedReply } from '../typings/interfaces';
 
 

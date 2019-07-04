@@ -1,6 +1,6 @@
 import { readdirSync } from 'fs';
 import randomColor from 'randomcolor';
-import { LookUpTable, Command, DiscordEmbedReply } from '../../typings/interfaces';
+import { LookUpTable, Command, DiscordEmbedReply } from '../typings/interfaces';
 
 // Variables
 

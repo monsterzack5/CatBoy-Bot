@@ -8,9 +8,9 @@ import { Message, TextChannel } from 'discord.js';
 import { Database } from 'better-sqlite3';
 import { schedule } from 'node-cron';
 
-import { importFile, exportFile } from './lib/tools/fileLoader';
-import { bot } from './lib/tools/bot';
-import { checkRequired } from './lib/tools/required';
+import { importFile, exportFile } from './utils/fileLoader';
+import { bot } from './utils/bot';
+import { checkRequired } from './utils/required';
 import {
    ConfigOptions, RawReactData, Command, DiscordEmbedReply,
 } from './typings/interfaces';
@@ -70,15 +70,15 @@ bot.on('ready', async (): Promise<void> => {
       process.exit(1);
    }
 
-   ({ db } = await import('./lib/tools/db'));
+   ({ db } = await import('./tools/db'));
 
-   ({ createCommandsMap, createCommandsEmbed } = await import('./lib/tools/commandhandler'));
+   ({ createCommandsMap, createCommandsEmbed } = await import('./tools/commandhandler'));
    commands = await createCommandsMap();
    commandsEmbed = createCommandsEmbed();
 
-   ({ handleFavorite, handleFilter, handleReport } = await import('./lib/tools/react'));
-   ({ updateChan } = await import('./lib/tools/4chan'));
-   ({ checkAntiSpam } = await import('./lib/tools/antispam'));
+   ({ handleFavorite, handleFilter, handleReport } = await import('./tools/react'));
+   ({ updateChan } = await import('./tools/4chan'));
+   ({ checkAntiSpam } = await import('./tools/antispam'));
    // ({ updateBing } = await import('./lib/tools/bing'));
 
    const config: ConfigOptions = JSON.parse(readFileSync(`./${process.env.configFile}.json`).toString());
