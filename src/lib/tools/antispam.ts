@@ -1,40 +1,10 @@
-import { readdirSync } from 'fs';
-import { StoredMessage, LookUpTable, Command } from '../../typings/interfaces';
-
-/**
- * The idea behind this antispam function is based off of:
- * https://github.com/Michael-J-Scofield/discord-anti-spam/
- *
- * But the code used is entirely my own, written by me.
- * As the original npm module is programmed differently from my needs.
- *
- * TODO:
- * const exempt = ['Role', 'Names', 'Here'];
- */
-
+import { StoredMessage, LookUpTable } from '../../typings/interfaces';
+import { createTimeOutTable } from './commandhandler';
 
 // Variables
 let messages: StoredMessage[] = [];
-const lookUpTable: LookUpTable = {};
-const defaultTimeLimit = 1000;
+const lookUpTable: LookUpTable = createTimeOutTable();
 
-
-// this anon function will import every file in /lib/
-// and make a lookup table of each command's time limit
-// we wrap it in () so we don't polute the namespace
-(async function init(): Promise<void> {
-   const filepromises: Promise<Command>[] = [];
-   const files = readdirSync('./dist/lib/')
-      .filter(f => f.endsWith('.js'));
-   for (const file of files) {
-      filepromises.push(import(`../${file}`));
-   }
-   const cmdFiles = await Promise.all(filepromises);
-   for (const cmd of cmdFiles) {
-      if (!cmd.help.timeout) cmd.help.timeout = defaultTimeLimit;
-      lookUpTable[cmd.help.name] = cmd.help.timeout;
-   }
-}());
 function pushToMessages(msgAuthorId: string, command: string): void {
    messages.push({
       time: Date.now(),
@@ -64,10 +34,8 @@ export function checkAntiSpam(msgAuthorId: string, command: string): boolean {
       messages = messages.filter(msg => msg.auth !== msgAuthorId
          && msg.cmd !== command);
       pushToMessages(msgAuthorId, command);
-      console.log(`message is NOT, timelimit: ${lookUpTable[command]}`);
       return false;
    }
-   console.log(`message is spam, timelimit: ${lookUpTable[command]}`);
    // we return true because the message is spam
    return true;
 }

@@ -125,8 +125,7 @@ async function bingCat(): Promise<DiscordEmbedReply> {
 
 export default async (message: Message): Promise<void> => {
    // picks a random number between 0 and X-1
-   // const randomSearch = Math.floor(Math.random() * 50);
-   const randomSearch = 5;
+   const randomSearch = Math.floor(Math.random() * 50);
    let reply: DiscordEmbedReply = {};
 
    // 0-3 for boorus, 4 to 10 for 4chan, 11 and up for bing

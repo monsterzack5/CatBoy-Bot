@@ -38,6 +38,7 @@ export interface StoredMessage {
 }
 
 export interface Command {
+   (message: Message, args: string[]): void;
    default(message: Message, args: string[]): void;
    help: {
       name: string;
@@ -49,7 +50,6 @@ export interface Command {
 export interface LookUpTable {
    [index: string]: number;
 }
-
 
 export interface ReturnedJSON {
    value: ReturnedJSON[];
