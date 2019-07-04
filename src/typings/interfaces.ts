@@ -98,3 +98,7 @@ export interface DiscordEmbedReply {
       };
    };
 }
+
+export interface CommandFunction {
+   (message: Message, args: string[]): void | Promise<void>;
+}
