@@ -6,8 +6,7 @@
       "module": "commonjs",
       // if you include nothing or es6 you get DOM typings, ew
       "lib": ["esnext"],
-      /* Generates corresponding '.d.ts' file. */
-      "declaration": false,
+      // generates .js.map files, set true to use the debugger
       "sourceMap": false,
       /* Redirect output structure to the directory. */
       "outDir": "./dist",
@@ -26,9 +25,11 @@
       "types": ["node"],
       /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */
       "esModuleInterop": true
-
    },
    "include": [
       "./src/**/*",
+   ],
+   "exclude": [
+      "./node_modules",
    ]
 }
