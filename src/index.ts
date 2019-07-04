@@ -14,7 +14,7 @@ import { bot } from './lib/tools/bot';
 import { checkRequired } from './lib/tools/required';
 import {
    ConfigOptions, RawReactData, Command, DiscordEmbedReply,
-} from '../typings/interfaces';
+} from './typings/interfaces';
 
 if (!checkRequired()) throw new Error('Error! Enviorment Variables not set!');
 

@@ -1,5 +1,5 @@
 import { readdirSync } from 'fs';
-import { StoredMessage, LookUpTable, Command } from '../../../typings/interfaces';
+import { StoredMessage, LookUpTable, Command } from '../../typings/interfaces';
 
 /**
  * The idea behind this antispam function is based off of:

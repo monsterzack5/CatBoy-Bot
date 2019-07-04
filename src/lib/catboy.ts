@@ -3,7 +3,7 @@ import SearchResults from 'booru/dist/structures/SearchResults';
 import randomColor from 'randomcolor';
 import { Message } from 'discord.js';
 import { db } from './tools/db';
-import { DiscordEmbedReply } from '../../typings/interfaces';
+import { DiscordEmbedReply } from '../typings/interfaces';
 
 
 // these statements get the length of the DB

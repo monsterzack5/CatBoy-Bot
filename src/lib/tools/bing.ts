@@ -1,6 +1,6 @@
 import request from 'request-promise-native';
 import { db } from './db';
-import { ReturnedJSON, BingImage } from '../../../typings/interfaces';
+import { ReturnedJSON, BingImage } from '../../typings/interfaces';
 
 const insertBing = db.prepare('INSERT OR REPLACE INTO bingcats (id, url) VALUES (?, ?)');
 const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'bing\'');

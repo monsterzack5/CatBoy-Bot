@@ -2,7 +2,7 @@ import { Message } from 'discord.js';
 import { writeFileSync, readFileSync } from 'fs';
 import { exportFile } from './tools/fileLoader';
 import { bot } from './tools/bot';
-import { ConfigOptions } from '../../typings/interfaces';
+import { ConfigOptions } from '../typings/interfaces';
 
 const gameStates = ['playing', 'watching', 'listening', 'streaming'];
 
