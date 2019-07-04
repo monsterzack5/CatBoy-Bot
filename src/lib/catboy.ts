@@ -23,7 +23,6 @@ const searchFilteredById = db.prepare('SELECT * FROM filtered WHERE id = ?');
 
 // update vars that hold the total items of the tables every 5 minutes
 setInterval(() => {
-   console.log('updating count in db');
    bingCount = bCount.get()['COUNT(*)'];
    chanCount = cCount.get()['COUNT(*)'];
 }, 600000);
@@ -95,7 +94,6 @@ async function booruCat(message: Message): Promise<Reply> {
       // check if this catboy is filtered, if so return function recursively
       const isFiltered = searchFilteredById.get(cat[0].fileUrl);
       if (isFiltered) {
-         console.log(`trying to send a filtered catboy: ${cat[0].fileUrl}`);
          return booruCat(message);
       }
 
@@ -140,6 +138,7 @@ export default async (message: Message): Promise<void> => {
 export const help = {
    name: 'catboy',
    help: 'Sends a random catboy :cat:',
+   timeout: 1000,
 };
 
 interface Reply {

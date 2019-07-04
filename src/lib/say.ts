@@ -7,4 +7,5 @@ export default (message: Message, args: string[]): void => {
 export const help = {
    name: 'say',
    help: 'Repeat after me :smile_cat:',
+   timeout: 1250,
 };

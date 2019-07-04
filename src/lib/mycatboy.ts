@@ -25,4 +25,5 @@ export default async (message: Message): Promise<void> => {
 export const help = {
    name: 'mycatboy',
    help: 'Sends your own personal catboy :kissing_cat:',
+   timeout: 2000,
 };

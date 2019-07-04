@@ -17,4 +17,5 @@ export default (message: Message, args: string[]): void => {
 export const help = {
    name: 'sayd',
    help: 'Who said that? :smirk_cat:',
+   timeout: 1250,
 };

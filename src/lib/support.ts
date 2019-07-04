@@ -7,4 +7,5 @@ export default (message: Message): void => {
 export const help = {
    name: 'support',
    help: 'If you need any support :scream_cat:',
+   timeout: 10000,
 };

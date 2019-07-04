@@ -6,4 +6,5 @@ export default (message: Message): void => {
 
 export const help = {
    name: 'repo',
+   timeout: 10000,
 };
