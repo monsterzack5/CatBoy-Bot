@@ -1,3 +1,4 @@
+import { readdirSync } from 'fs';
 import { Message } from 'discord.js';
 
 /**
@@ -11,16 +12,33 @@ import { Message } from 'discord.js';
  * const exempt = ['Role', 'Names', 'Here'];
  */
 
-// Constants
-const timeLimit = 1500;
 
-// Containers
+// Variables
 let messages: StoredMessage[] = [];
+const lookUpTable: LookUpTable = {};
+const defaultTimeLimit = 1000;
 
-function pushToMessages(message: Message, command: string): void {
+
+// this anon function will import every file in /lib/
+// and make a lookup table of each command's time limit
+// we wrap it in () so we don't polute the namespace
+(async function init(): Promise<void> {
+   const filepromises: Promise<Command>[] = [];
+   const files = readdirSync('./dist/lib/')
+      .filter(f => f.endsWith('.js'));
+   for (const file of files) {
+      filepromises.push(import(`../${file}`));
+   }
+   const cmdFiles = await Promise.all(filepromises);
+   for (const cmd of cmdFiles) {
+      if (!cmd.help.timeout) cmd.help.timeout = defaultTimeLimit;
+      lookUpTable[cmd.help.name] = cmd.help.timeout;
+   }
+}());
+function pushToMessages(msgAuthorId: string, command: string): void {
    messages.push({
       time: Date.now(),
-      auth: message.author.id,
+      auth: msgAuthorId,
       cmd: command,
    });
 }
@@ -29,27 +47,27 @@ function pushToMessages(message: Message, command: string): void {
  * This function is only ever meant to get messages which the bot will do
  * something with.
  */
-export function checkAntiSpam(message: Message, command: string): boolean {
-   const oldMessage = messages.find(msg => msg.auth === message.author.id
+export function checkAntiSpam(msgAuthorId: string, command: string): boolean {
+   const oldMessage = messages.find(msg => msg.auth === msgAuthorId
       && msg.cmd === command);
 
    // if no messages are found, eg: they have never used the command
    // we should ALWAYS add to the queue
    if (!oldMessage) {
-      pushToMessages(message, command);
+      pushToMessages(msgAuthorId, command);
       return false;
    }
 
    // if the message time is less than the allowed time
    // then the message isn't spam.
-   if (oldMessage.time < (Date.now() - timeLimit)) {
-      const temp = messages.filter(msg => msg.auth !== message.author.id
+   if (oldMessage.time < (Date.now() - lookUpTable[command])) {
+      messages = messages.filter(msg => msg.auth !== msgAuthorId
          && msg.cmd !== command);
-      messages = temp;
-      pushToMessages(message, command);
+      pushToMessages(msgAuthorId, command);
+      console.log(`message is NOT, timelimit: ${lookUpTable[command]}`);
       return false;
    }
-
+   console.log(`message is spam, timelimit: ${lookUpTable[command]}`);
    // we return true because the message is spam
    return true;
 }
@@ -58,4 +76,17 @@ interface StoredMessage {
    time: number;
    auth: string;
    cmd: string;
+}
+
+interface Command {
+   default(message: Message, args: string[]): void;
+   help: {
+      name: string;
+      help?: string;
+      timeout?: number;
+   };
+}
+
+interface LookUpTable {
+   [index: string]: number;
 }

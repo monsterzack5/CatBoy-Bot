@@ -130,7 +130,7 @@ bot.on('message', (message: Message): void => {
       const command = messageArguments.shift() as string;
       const cmdfunction: (message: Message, args: string[]) => void | Promise<void> = commands.get(command);
       if (cmdfunction) {
-         const isSpam = checkAntiSpam(message, command);
+         const isSpam = checkAntiSpam(message.author.id, command);
          if (!isSpam) {
             cmdfunction(message, messageArguments);
          } else {
