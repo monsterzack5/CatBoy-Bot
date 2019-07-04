@@ -16,10 +16,10 @@ const defaultTimeLimit = 1000;
 // loads all the cmdFiles at boot, and caches them
 async function loadFiles(): Promise<void> {
    const filepromises: Promise<Command>[] = [];
-   const files = readdirSync('./dist/lib/')
+   const files = readdirSync('./dist/commands')
       .filter(f => f.endsWith('.js'));
    for (const file of files) {
-      filepromises.push(import(`../${file}`));
+      filepromises.push(import(`../commands/${file}`));
    }
    cmdFiles = await Promise.all(filepromises);
 }

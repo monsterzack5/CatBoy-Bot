@@ -70,15 +70,15 @@ bot.on('ready', async (): Promise<void> => {
       process.exit(1);
    }
 
-   ({ db } = await import('./tools/db'));
+   ({ db } = await import('./utils/db'));
 
-   ({ createCommandsMap, createCommandsEmbed } = await import('./tools/commandhandler'));
+   ({ createCommandsMap, createCommandsEmbed } = await import('./utils/commandhandler'));
    commands = await createCommandsMap();
    commandsEmbed = createCommandsEmbed();
 
-   ({ handleFavorite, handleFilter, handleReport } = await import('./tools/react'));
-   ({ updateChan } = await import('./tools/4chan'));
-   ({ checkAntiSpam } = await import('./tools/antispam'));
+   ({ handleFavorite, handleFilter, handleReport } = await import('./utils/react'));
+   ({ updateChan } = await import('./utils/4chan'));
+   ({ checkAntiSpam } = await import('./utils/antispam'));
    // ({ updateBing } = await import('./lib/tools/bing'));
 
    const config: ConfigOptions = JSON.parse(readFileSync(`./${process.env.configFile}.json`).toString());
