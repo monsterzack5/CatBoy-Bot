@@ -2,10 +2,8 @@ import { search as booru } from 'booru';
 import SearchResults from 'booru/dist/structures/SearchResults';
 import randomColor from 'randomcolor';
 import { Message } from 'discord.js';
-import { db, searchFilteredById } from './tools/db';
+import { db } from './tools/db';
 
-// these statements are _all_ unique to this file,
-// and wont be recreated in the db class
 
 // these statements get the length of the DB
 const bCount = db.prepare('SELECT COUNT(*) FROM bingcats');
@@ -20,12 +18,15 @@ const searchChan = db.prepare('SELECT * FROM chancats LIMIT 1 OFFSET ?');
 let bingCount = bCount.get()['COUNT(*)'];
 let chanCount = cCount.get()['COUNT(*)'];
 
+// this searches the DB for filtered booru cats
+const searchFilteredById = db.prepare('SELECT * FROM filtered WHERE id = ?');
+
 // update vars that hold the total items of the tables every 5 minutes
 setInterval(() => {
    console.log('updating count in db');
    bingCount = bCount.get()['COUNT(*)'];
    chanCount = cCount.get()['COUNT(*)'];
-}, 630000);
+}, 600000);
 
 const sfwSites = [
    {
@@ -86,13 +87,15 @@ async function booruCat(message: Message): Promise<Reply> {
          random: true,
       });
 
+      // this happens sometimes, i have no idea why
       if (!cat[0].fileUrl) {
-         throw new Error('Booru cat returned undefined fileUrl');
+         return booruCat(message);
       }
 
       // check if this catboy is filtered, if so return function recursively
-      const isFiltered = searchFilteredById.get(cat);
+      const isFiltered = searchFilteredById.get(cat[0].fileUrl);
       if (isFiltered) {
+         console.log(`trying to send a filtered catboy: ${cat[0].fileUrl}`);
          return booruCat(message);
       }
 
@@ -123,7 +126,8 @@ async function bingCat(): Promise<Reply> {
 
 export default async (message: Message): Promise<void> => {
    // picks a random number between 0 and X-1
-   const randomSearch = Math.floor(Math.random() * 50);
+   // const randomSearch = Math.floor(Math.random() * 50);
+   const randomSearch = 5;
    let reply: Reply = {};
 
    // 0-3 for boorus, 4 to 10 for 4chan, 11 and up for bing

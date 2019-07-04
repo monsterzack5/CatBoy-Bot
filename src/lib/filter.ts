@@ -1,11 +1,13 @@
 import { Message } from 'discord.js';
-import {
-   insertFilter,
-   searchBingById,
-   searchChanByNo,
-   deleteChanByNo,
-   deleteBingById,
-} from './tools/db';
+import { db } from './tools/db';
+
+const insertFilter = db.prepare('INSERT INTO filtered (id, source) VALUES (?, ?)');
+
+const searchBing = db.prepare('SELECT * FROM bingcats WHERE id = ?');
+const searchChan = db.prepare('SELECT * FROM chancats WHERE no = ?');
+
+const deleteChan = db.prepare('DELETE FROM chancats WHERE no = ?');
+const deleteBing = db.prepare('DELETE FROM bingcats WHERE id = ?');
 
 export default async (message: Message, args: string[]): Promise<void> => {
    if (message.author.id !== process.env.botOwner) {
@@ -24,10 +26,10 @@ export default async (message: Message, args: string[]): Promise<void> => {
             msg.delete(3000);
             return;
          }
-         const exists = searchBingById.get(args[1]);
+         const exists = searchBing.get(args[1]);
          if (exists) {
             insertFilter.run(args[1], 'bing');
-            deleteBingById.run(args[1]);
+            deleteBing.run(args[1]);
             message.react('✅');
             return;
          }
@@ -41,10 +43,10 @@ export default async (message: Message, args: string[]): Promise<void> => {
             msg.delete(3000);
             return;
          }
-         const exists = searchChanByNo.get(args[1]);
+         const exists = searchChan.get(args[1]);
          if (exists) {
             insertFilter.run(args[1], 'chan');
-            deleteChanByNo.run(args[1]);
+            deleteChan.run(args[1]);
             message.react('✅');
             return;
          }

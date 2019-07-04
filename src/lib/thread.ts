@@ -1,9 +1,11 @@
 import { Message } from 'discord.js';
-import { searchThreads } from './tools/db';
+import { db } from './tools/db';
+
+const search = db.prepare('SELECT * FROM threads');
 
 export default (message: Message): void => {
    let reply = '';
-   const threads = searchThreads.all();
+   const threads = search.all();
 
    // if there are no threads
    if (!threads) {

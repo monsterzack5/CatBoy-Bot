@@ -8,7 +8,6 @@ import { Message, TextChannel } from 'discord.js';
 import { schedule } from 'node-cron';
 import { Database } from 'better-sqlite3';
 
-
 import { checkAntiSpam } from './lib/tools/antispam';
 import { importFile, exportFile } from './lib/tools/fileLoader';
 import { bot } from './lib/tools/bot';

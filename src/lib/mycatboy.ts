@@ -1,9 +1,11 @@
 import randomColor from 'randomcolor';
 import { Message } from 'discord.js';
-import { searchFavorite } from './tools/db';
+import { db } from './tools/db';
+
+const search = db.prepare('SELECT url FROM favorites WHERE uid = ?');
 
 export default async (message: Message): Promise<void> => {
-   const catboy = searchFavorite.get(message.author.id);
+   const catboy = search.get(message.author.id);
    if (catboy) {
       const color = parseInt((randomColor() as string).substring(1), 16);
       message.channel.send({

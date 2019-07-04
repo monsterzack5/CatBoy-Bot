@@ -1,17 +1,16 @@
 import request from 'request-promise-native';
-import {
-   db,
-   insertBing,
-   deleteBingById,
-   searchFilteredBySource,
-} from './db';
+import { db } from './db';
+
+const insertBing = db.prepare('INSERT OR REPLACE INTO bingcats (id, url) VALUES (?, ?)');
+const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'bing\'');
+const deleteBing = db.prepare('DELETE FROM bingcats WHERE id = ?');
 
 const insertImagesRemoveFiltered = db.transaction((images, badImages): void => {
    for (const image of images) {
       insertBing.run(image.id, image.url);
    }
    for (const badImage of badImages) {
-      deleteBingById.run(badImage.id);
+      deleteBing.run(badImage.id);
    }
 });
 
@@ -124,7 +123,7 @@ export async function updateBing(): Promise<void> {
    const dataFiltered: BingImage[] = removeFiltered(dataLite);
 
    try {
-      const badImages = searchFilteredBySource.all('bing');
+      const badImages = searchFiltered.all();
       insertImagesRemoveFiltered(dataFiltered, badImages);
    } catch (e) {
       console.error(`Error! Failed to update the bing cats!\n${e}`);
