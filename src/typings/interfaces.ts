@@ -88,14 +88,22 @@ export interface RawReactData {
    };
 }
 
-export interface DiscordEmbedReply {
-   embed?: {
+export interface DiscordEmbedImageReply {
+   embed: {
       title?: string;
       color: number;
       description: string;
-      image?: {
+      image: {
          url: string;
       };
+   };
+}
+
+export interface DiscordEmbedReply {
+   embed: {
+      title?: string;
+      color: number;
+      description: string;
    };
 }
 
