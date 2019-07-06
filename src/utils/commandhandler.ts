@@ -69,7 +69,7 @@ export function createTimeOutTable(): LookUpTable {
       process.exit(123);
    }
    for (const command of cmdFiles) {
-      if (command.help.timeout) command.help.timeout = defaultTimeLimit;
+      if (!command.help.timeout) command.help.timeout = defaultTimeLimit;
       lookUpTable[command.help.name] = command.help.timeout as number;
    }
    return lookUpTable;
