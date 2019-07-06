@@ -11,6 +11,7 @@ const deleteBing = db.prepare('DELETE FROM bingcats WHERE id = ?');
 const deleteReport = db.prepare('DELETE FROM reports WHERE url = ?');
 
 const searchBing = db.prepare('SELECT * FROM bingcats WHERE url = ?');
+const searchFiltered = db.prepare('SELECT * FROM filtered WHERE id = ?');
 const searchReports = db.prepare('SELECT * FROM reports WHERE url = ?');
 
 export function handleFavorite(userID: string, url: string): void {
@@ -18,10 +19,16 @@ export function handleFavorite(userID: string, url: string): void {
 }
 
 export function handleFilter(url: string, msg: Message): void {
-   // check if its a 4cat first, because we dont need an sql call
-   // as we can assume its already in the db, because we sent the message
+   // extracting the crab react and the deleteReport to their own function
+   // makes pretty much no difference
    if (url.startsWith('https://i.4cdn.org/cm/')) {
       const no = url.substring(22, 35);
+      const isFiltered = searchFiltered.get(no);
+      if (isFiltered) {
+         deleteReport.run(url);
+         msg.react('🦀');
+         return;
+      }
       insertFilter.run(no, 'chan');
       deleteChan.run(no);
       deleteReport.run(url);
@@ -30,6 +37,12 @@ export function handleFilter(url: string, msg: Message): void {
    }
    const isBing = searchBing.get(url);
    if (isBing) {
+      const isFiltered = searchFiltered.get(isBing.id);
+      if (isFiltered) {
+         deleteReport.run(url);
+         msg.react('🦀');
+         return;
+      }
       insertFilter.run(isBing.id, 'bing');
       deleteBing.run(isBing.id);
       deleteReport.run(url);
@@ -37,6 +50,12 @@ export function handleFilter(url: string, msg: Message): void {
       return;
    }
    // we're here if its a booru cat
+   const isFiltered = searchFiltered.get(url);
+   if (isFiltered) {
+      deleteReport.run(url);
+      msg.react('🦀');
+      return;
+   }
    insertFilter.run(url, 'booru');
    deleteReport.run(url);
    msg.react('🇫');
