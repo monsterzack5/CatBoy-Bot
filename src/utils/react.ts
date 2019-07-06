@@ -8,6 +8,7 @@ const updateReport = db.prepare('UPDATE reports SET num = ? WHERE url = ?');
 
 const deleteChan = db.prepare('DELETE FROM chancats WHERE no = ?');
 const deleteBing = db.prepare('DELETE FROM bingcats WHERE id = ?');
+const deleteReport = db.prepare('DELETE FROM reports WHERE url = ?');
 
 const searchBing = db.prepare('SELECT * FROM bingcats WHERE url = ?');
 const searchReports = db.prepare('SELECT * FROM reports WHERE url = ?');
@@ -21,20 +22,23 @@ export function handleFilter(url: string, msg: Message): void {
    // as we can assume its already in the db, because we sent the message
    if (url.startsWith('https://i.4cdn.org/cm/')) {
       const no = url.substring(22, 35);
-      deleteChan.run(no);
       insertFilter.run(no, 'chan');
+      deleteChan.run(no);
+      deleteReport.run(url);
       msg.react('🇫');
       return;
    }
    const isBing = searchBing.get(url);
    if (isBing) {
-      deleteBing.run(isBing.id);
       insertFilter.run(isBing.id, 'bing');
+      deleteBing.run(isBing.id);
+      deleteReport.run(url);
       msg.react('🇫');
       return;
    }
    // we're here if its a booru cat
    insertFilter.run(url, 'booru');
+   deleteReport.run(url);
    msg.react('🇫');
 }
 
