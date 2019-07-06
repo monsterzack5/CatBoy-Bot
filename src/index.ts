@@ -4,7 +4,7 @@ import { importFile } from './utils/fileLoader';
 import { bot } from './utils/bot';
 import { checkRequired } from './utils/required';
 import {
-   ConfigOptions, RawReactData, Command, DiscordEmbedReply, CommandFunction,
+   ConfigOptions, RawReactData, Command, CommandFunction, DiscordEmbedReply,
 } from './typings/interfaces';
 
 // make sure env vars are set!
@@ -21,7 +21,7 @@ let startTimers: () => void;
 
 // variables to store our command map and help embed
 let commands: Map<string, Command>;
-let commandsEmbed: DiscordEmbedReply = {};
+let commandsEmbed: DiscordEmbedReply;
 
 // do different things in dev vs prod mode
 if (process.env.NODE_ENV === 'dev') {
@@ -49,6 +49,10 @@ bot.on('ready', async (): Promise<void> => {
       process.exit(1);
    }
 
+   // read the config and set the prefix
+   const config: ConfigOptions = JSON.parse(readFileSync(`./${process.env.configFile}.json`).toString());
+   process.env.prefix = config.prefix as string;
+
    // import commandhandler.ts, which will import all the files in the commands folder
    // which will export the commandMap and the help embed
    ({ createCommandsMap, createCommandsEmbed } = await import('./utils/commandhandler'));
@@ -63,9 +67,6 @@ bot.on('ready', async (): Promise<void> => {
    ({ startTimers } = await import('./timers'));
    startTimers();
 
-   // read the config and set the prefix
-   const config: ConfigOptions = JSON.parse(readFileSync(`./${process.env.configFile}.json`).toString());
-   process.env.prefix = config.prefix as string;
 
    // set the game on boot
    if (config.gameUrl === '') {
