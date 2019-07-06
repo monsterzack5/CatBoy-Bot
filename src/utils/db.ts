@@ -1,6 +1,7 @@
 import Sqlite from 'better-sqlite3';
 import { existsSync } from 'fs';
 import { exportFile } from './fileLoader';
+import { bot } from './bot';
 
 let database: Sqlite.Database;
 
@@ -25,9 +26,16 @@ class Database {
 
 export const { db } = new Database();
 
+// Although both of these emitters try to exit Node gracefully, sockets
+// aren't forcibly closed, which keeps the event loop running (sometimes),
+// so we still need to call process.exit(). TODO.
+
 process.on('SIGINT', async (): Promise<void> => {
    database.close();
    await exportFile(`${process.env.dbFile}.db`);
+   await bot.destroy();
+   const { stopTimers } = await import('../timers');
+   stopTimers();
    console.log('aught interrupt signal, exiting!');
    process.exit(0);
 });
@@ -37,6 +45,8 @@ process.on('SIGTERM', async (): Promise<void> => {
    database.close();
    await exportFile(`${process.env.dbFile}.db`);
    await exportFile(`${process.env.dbFile}.db`, true);
+   const { stopTimers } = await import('../timers');
+   stopTimers();
    console.log('Goodbye!');
    process.exit(0);
 });
