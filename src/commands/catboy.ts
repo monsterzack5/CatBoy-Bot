@@ -58,12 +58,7 @@ const sitesLen = sfwSites.length;
 
 function embedBuilder(source: string | undefined, url: string): DiscordEmbedImageReply {
    const color = parseInt((randomColor() as string).substring(1), 16);
-   let description: string;
-
-   if (source === undefined || source === '') {
-      description = '';
-   } else description = `[Source](${source})`;
-
+   const description = !source ? '' : `[Source](${source})`;
    return {
       embed: {
          color,

@@ -10,7 +10,6 @@ const insertThread = db.prepare('INSERT OR REPLACE INTO threads (id, no) VALUES(
 const deleteChan = db.prepare('DELETE FROM chancats WHERE no = ?');
 const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'chan\'');
 
-
 const insertImagesRemoveFiltered = db.transaction((images, badImages): void => {
    for (const image of images) {
       // since `no` are number literals, sqlite will
@@ -51,10 +50,7 @@ function checkThread(singleThread: Post): boolean {
    const regex = /cat\s?boy/i;
    if (!thread.sub) thread.sub = '';
    if (!thread.com) thread.com = '';
-   if (thread.sub.match(regex) || thread.com.match(regex)) {
-      return true;
-   }
-   return false;
+   return !!(thread.sub.match(regex) || thread.com.match(regex));
 }
 
 export async function updateChan(): Promise<void> {
