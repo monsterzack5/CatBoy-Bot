@@ -3,7 +3,7 @@ import SearchResults from 'booru/dist/structures/SearchResults';
 import randomColor from 'randomcolor';
 import { Message } from 'discord.js';
 import { db } from '../utils/db';
-import { DiscordEmbedReply } from '../typings/interfaces';
+import { DiscordEmbedImageReply } from '../typings/interfaces';
 
 
 // these statements get the length of the DB
@@ -56,7 +56,7 @@ const sfwSites = [
 ];
 const sitesLen = sfwSites.length;
 
-function embedBuilder(source: string | undefined, url: string): DiscordEmbedReply {
+function embedBuilder(source: string | undefined, url: string): DiscordEmbedImageReply {
    const color = parseInt((randomColor() as string).substring(1), 16);
    let description: string;
 
@@ -76,62 +76,64 @@ function embedBuilder(source: string | undefined, url: string): DiscordEmbedRepl
 }
 
 
-async function booruCat(message: Message): Promise<DiscordEmbedReply> {
+async function booruCat(): Promise<DiscordEmbedImageReply | void> {
    const randomNum = Math.floor(Math.random() * sitesLen);
    let cat: SearchResults;
-   let reply: DiscordEmbedReply = {};
 
    try {
       cat = await booru(sfwSites[randomNum].site, sfwSites[randomNum].search, {
          limit: 1,
          random: true,
       });
-
-      // this happens sometimes, i have no idea why
-      if (!cat[0].fileUrl) {
-         return booruCat(message);
-      }
-
-      // check if this catboy is filtered, if so return function recursively
-      const isFiltered = searchFilteredById.get(cat[0].fileUrl);
-      if (isFiltered) {
-         return booruCat(message);
-      }
-
-      reply = await embedBuilder(cat[0].source, cat[0].fileUrl) as DiscordEmbedReply;
    } catch (err) {
-      message.react('⁉');
-      console.error(err);
+      return console.error(err);
    }
-   return reply;
+   // this happens sometimes, i have no idea why
+   if (!cat[0].fileUrl) {
+      return booruCat();
+   }
+
+   // check if this catboy is filtered, if so return function recursively
+   const isFiltered = searchFilteredById.get(cat[0].fileUrl);
+   if (isFiltered) {
+      return booruCat();
+   }
+
+   const reply = embedBuilder(cat[0].source, cat[0].fileUrl);
+
+   return reply as DiscordEmbedImageReply;
 }
 
-async function chanCat(): Promise<DiscordEmbedReply> {
+function chanCat(): DiscordEmbedImageReply {
    const random = Math.floor(Math.random() * chanCount);
    const cat = searchChan.get(random);
    const url = `https://i.4cdn.org/cm/${cat.no}${cat.ext}`;
-   const reply = await embedBuilder('https://boards.4channel.org/cm/catalog#s=catboy', url);
+   const reply = embedBuilder('https://boards.4channel.org/cm/catalog#s=catboy', url);
    return reply;
 }
 
-async function bingCat(): Promise<DiscordEmbedReply> {
+function bingCat(): DiscordEmbedImageReply {
    const random = Math.floor(Math.random() * bingCount);
    const cat = searchBing.get(random);
    const source = `https://www.bing.com/images/search?view=detailv2&id=${cat.id}`;
-   const reply = await embedBuilder(source, cat.url);
+   const reply = embedBuilder(source, cat.url);
    return reply;
 }
 
-
-export default async (message: Message): Promise<void> => {
+export async function getRandomCat(): Promise<DiscordEmbedImageReply> {
    // picks a random number between 0 and X-1
    const randomSearch = Math.floor(Math.random() * 50);
-   let reply: DiscordEmbedReply = {};
+   let reply;
 
    // 0-3 for boorus, 4 to 10 for 4chan, 11 and up for bing
-   if (randomSearch < 10) reply = await booruCat(message);
-   if (randomSearch > 9 && randomSearch < 25) reply = await chanCat();
-   if (randomSearch > 24) reply = await bingCat();
+   if (randomSearch < 10) reply = await booruCat() as DiscordEmbedImageReply;
+   if (randomSearch > 9 && randomSearch < 25) reply = chanCat();
+   if (randomSearch > 24) reply = bingCat();
+   return reply as DiscordEmbedImageReply;
+}
+
+export default async (message: Message): Promise<void> => {
+   const reply = await getRandomCat();
    message.channel.send(reply);
 };
 
