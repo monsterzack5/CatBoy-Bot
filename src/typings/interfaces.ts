@@ -1,4 +1,30 @@
 import { Message } from 'discord.js';
+import * as http from 'http';
+
+// these are basic typings that got doesnt have when its fully typed otherwise ???
+declare module 'got' {
+   interface Response<B extends Buffer | string | object> extends http.IncomingMessage {
+      timings: {
+         start: number;
+         socket: number;
+         lookup: number;
+         connect: number;
+         upload: number;
+         response: number;
+         end: number;
+         error: object;
+         phases: {
+            wait: number;
+            dns: number;
+            tcp: number;
+            request: number;
+            firstByte: number;
+            download: number;
+            total: number;
+         };
+      };
+   }
+}
 
 export interface ChanImage {
    ext: string;

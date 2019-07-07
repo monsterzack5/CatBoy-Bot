@@ -1,4 +1,4 @@
-import request from 'request-promise-native';
+import got from 'got';
 import { db } from './db';
 import { ReturnedJSON, BingImage } from '../typings/interfaces';
 
@@ -38,15 +38,14 @@ const filteredWebsites = [
 
 async function getJSON(url: string): Promise<ReturnedJSON | void> {
    try {
-      const req = await request({
-         uri: url,
+      const req = await got(url, {
          headers: {
-            'User-Agent': 'com.zhiliaoapp.musically/2019031132 (Linux; U; Android 9; en_US; Pixel 2 XL; Build/PQ2A.190305.002; Cronet/58.0.2991.0)',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36)',
             'Ocp-Apim-Subscription-Key': process.env.bingToken,
          },
          json: true,
       });
-      return req;
+      return req.body;
    } catch (e) {
       return console.error(`Error Getting bing JSON:\n${e}`);
    }

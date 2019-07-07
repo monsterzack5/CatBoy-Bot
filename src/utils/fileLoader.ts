@@ -1,5 +1,5 @@
 import { statSync, createWriteStream } from 'fs';
-import request from 'request';
+import got from 'got';
 import { TextChannel } from 'discord.js';
 import { bot } from './bot';
 
@@ -15,17 +15,15 @@ import { bot } from './bot';
  *
  */
 
-function downloadFile(url: string, fileName: string): Promise<void> {
-   // you need to use `Request` to download anything, `Request promise native` can't.
-   // so we need to keep this promise
-   return new Promise((resolve): void => {
-      request({
-         uri: url,
+async function downloadFile(url: string, fileName: string): Promise<void> {
+   await new Promise((resolve) => {
+      got.stream(url, {
          headers: {
             'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36',
          },
-      }).pipe(createWriteStream(fileName))
-         .on('finish', (): void => resolve());
+      })
+         .pipe(createWriteStream(fileName))
+         .on('finish', () => resolve());
    });
 }
 

@@ -1,4 +1,4 @@
-import request from 'request-promise-native';
+import got from 'got';
 import { db } from './db';
 import {
    ChanImage, Post, ImagePost, CatalogPage, ThreadResponse,
@@ -23,11 +23,13 @@ const insertImagesRemoveFiltered = db.transaction((images, badImages): void => {
 
 async function getThread(threadNo: number): Promise<ThreadResponse | void> {
    try {
-      const req = await request({
-         uri: `https://a.4cdn.org/cm/thread/${threadNo}.json`,
+      const req = await got(`https://a.4cdn.org/cm/thread/${threadNo}.json`, {
+         headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36)',
+         },
          json: true,
       });
-      return req;
+      return req.body;
    } catch (e) {
       return console.error(`Error Getting thread info:\n${e}`);
    }
@@ -35,11 +37,13 @@ async function getThread(threadNo: number): Promise<ThreadResponse | void> {
 
 async function getCatalog(): Promise<CatalogPage[] | void> {
    try {
-      const req = await request({
-         uri: 'https://a.4cdn.org/cm/catalog.json',
+      const req = await got('https://a.4cdn.org/cm/catalog.json', {
+         headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36)',
+         },
          json: true,
       });
-      return req;
+      return req.body;
    } catch (e) {
       return console.error(`Error Getting catalog info:\n${e}`);
    }

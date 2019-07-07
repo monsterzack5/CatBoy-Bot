@@ -11,10 +11,10 @@
       "better-sqlite3": "^5.4.0",
       "booru": "^2.0.2",
       "discord.js": "^11.5.1",
+      "got": "^9.6.0",
       "node-cron": "^2.0.3",
-      "randomcolor": "^0.5.4",
-      "request": "^2.88.0",
-      "request-promise-native": "^1.0.7"
+      "p-queue": "^6.0.2",
+      "randomcolor": "^0.5.4"
    },
    "scripts": {
       "postinstall": "tsc",
@@ -28,11 +28,12 @@
    "devDependencies": {
       "@types/better-sqlite3": "^5.4.0",
       "@types/dotenv": "^6.1.1",
+      "@types/got": "^9.6.0",
       "@types/node": "^12.0.10",
       "@types/node-cron": "^2.0.2",
       "@types/node-fetch": "^2.3.7",
+      "@types/p-queue": "^3.2.1",
       "@types/randomcolor": "^0.5.2",
-      "@types/request-promise-native": "^1.0.16",
       "@typescript-eslint/eslint-plugin": "^1.10.2",
       "@typescript-eslint/parser": "^1.10.2",
       "dotenv": "^8.0.0",
