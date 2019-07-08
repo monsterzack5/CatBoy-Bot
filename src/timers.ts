@@ -4,11 +4,13 @@ import { existsSync, mkdirSync } from 'fs';
 import { exportFile } from './utils/fileLoader';
 import { db } from './utils/db';
 import { updateChan } from './utils/4chan';
+import { checkHealth } from './utils/dbhealthcheck';
 
 const port = process.env.PORT || 5010;
 let httpServer: http.Server;
 let herokuPing: NodeJS.Timeout;
 let dbBackup: ScheduledTask;
+let dbHeathCheck: ScheduledTask;
 
 export function startTimers(): void {
    // create a http server that we can http get from our bot
@@ -38,6 +40,10 @@ export function startTimers(): void {
       await exportFile(`./tmp/${process.env.dbFile}.db`);
    });
 
+   dbHeathCheck = schedule('0 23 * * *', () => {
+      checkHealth();
+   });
+   
    // updates our bing catboy db once a day at 1pm
    // disabled until further notice
    // schedule('0 13 * * *', (): void => {
@@ -49,4 +55,5 @@ export function stopTimers(): void {
    httpServer.close();
    clearInterval(herokuPing);
    dbBackup.destroy();
+   dbHeathCheck.destroy();
 }
