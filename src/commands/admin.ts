@@ -2,7 +2,9 @@ import { Message } from 'discord.js';
 import { exportFile } from '../utils/fileLoader';
 import { updateChan } from '../utils/4chan';
 import { updateBing } from '../utils/bing';
+import { checkHealth } from '../utils/dbhealthcheck';
 
+// TODO: make some functions return values so we can print them out, see: logger
 export default (message: Message, args: string[]): void => {
    if (message.author.id !== process.env.botOwner || !args.length) {
       message.react('❌');
@@ -10,7 +12,7 @@ export default (message: Message, args: string[]): void => {
    }
 
    switch (args[0].toLowerCase()) {
-      case 'update':
+      case 'updateconfig':
          message.channel.send(`Updating ${process.env.configFile} using local version`);
          exportFile(`${process.env.configFile}.json`);
          break;
@@ -20,26 +22,33 @@ export default (message: Message, args: string[]): void => {
          exportFile(`${process.env.dbFile}.db`);
          break;
 
-      case 'dump':
-         message.channel.send({
-            files: [`${process.env.configFile}.json`],
-         });
-         break;
 
       case 'update4chan':
          message.channel.send('Updating 4chan imagedb');
          updateChan();
          break;
 
-      case 'dump4chan':
+
+      case 'updatebing':
+         updateBing();
+         message.channel.send('Updating bing db!');
+         break;
+
+      case 'checkhealth':
+         checkHealth();
+         message.channel.send('Checking the health of the db!');
+         break;
+
+      case 'dump':
          message.channel.send({
             files: [`${process.env.dbFile}.db`],
          });
          break;
 
-      case 'updatebing':
-         updateBing();
-         message.channel.send('Updating bing db!');
+      case 'dumpconfig':
+         message.channel.send({
+            files: [`${process.env.configFile}.json`],
+         });
          break;
 
       default:
@@ -51,5 +60,5 @@ export default (message: Message, args: string[]): void => {
 };
 
 export const help = {
-   name: 'config',
+   name: 'admin',
 };
