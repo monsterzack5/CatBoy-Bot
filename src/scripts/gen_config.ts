@@ -19,6 +19,7 @@ function initDb(): void {
    db.exec('CREATE TABLE IF NOT EXISTS filtered (id TEXT PRIMARY KEY, source TEXT NOT NULL) WITHOUT ROWID');
    db.exec('CREATE TABLE IF NOT EXISTS threads (id INTEGER PRIMARY KEY, no TEXT NOT NULL) WITHOUT ROWID');
    db.exec('CREATE TABLE IF NOT EXISTS reports (url TEXT PRIMARY KEY, num INTEGER NOT NULL, source TEXT NOT NULL) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS badurls (url TEXT PRIMARY KEY, source TEXT NOT NULL) WITHOUT ROWID');
    db.close();
 }
 initDb();
