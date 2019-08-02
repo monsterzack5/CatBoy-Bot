@@ -1,42 +1,37 @@
 import got from 'got';
 import { db } from './db';
-import { ReturnedJSON, BingImage } from '../typings/interfaces';
+import { ReturnedBingJSON } from '../typings/interfaces';
 
-const insertBing = db.prepare('INSERT OR REPLACE INTO bingcats (id, url) VALUES (?, ?)');
+const insertBing = db.prepare('INSERT OR REPLACE INTO bingcats (id, url, height, width, dateposted, name, color) VALUES (?, ?, ?, ?, ?, ?, ?)');
 const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'bing\'');
 const deleteBing = db.prepare('DELETE FROM bingcats WHERE id = ?');
+const selectAllFilters = db.prepare('SELECT regex FROM filters');
 
-const insertImagesRemoveFiltered = db.transaction((images, badImages): void => {
+const insertImagesRemoveFiltered = db.transaction((images: ReturnedBingJSON[], badImages): void => {
    for (const image of images) {
-      insertBing.run(image.id, image.url);
+      insertBing
+         .run(image.imageId, image.contentUrl, image.height, image.width, image.datePublished, image.name, image.accentColor);
    }
    for (const badImage of badImages) {
       deleteBing.run(badImage.id);
    }
 });
 
+// TODO: not hardcode this
 const searchTerms = [{
    q: 'anime+cat+boy',
-   limit: 280,
+   limit: 150,
 },
 {
    q: 'anime+cat+boys',
-   limit: 280,
+   limit: 150,
 },
 {
    q: 'anime+neko+boy',
-   limit: 280,
+   limit: 150,
 }];
 
-// todo: add hdwallpapers.cat
-// and add db support for this
-const filteredWebsites = [
-   /pics.me.me/i,
-   /wattpad.com/i,
-   /usafdrumcorps.us/i,
-];
-
-async function getJSON(url: string): Promise<ReturnedJSON | void> {
+async function getJSON(url: string): Promise<ReturnedBingJSON | void> {
    try {
       const req = await got(url, {
          headers: {
@@ -58,8 +53,8 @@ async function sleep(timeMs: number): Promise<void> {
 }
 
 // recursive function to use Bing's API
-async function getImages(inputJSON: ReturnedJSON[] = [], offset = 0, termNum = 0,
-   totalItems = searchTerms[0].limit): Promise<ReturnedJSON[]> {
+async function getImages(inputJSON: ReturnedBingJSON[] = [], offset = 0, termNum = 0,
+   totalItems = searchTerms[0].limit): Promise<ReturnedBingJSON[]> {
    // what's the point of eslint(no-param-reassign) ????
    let json = inputJSON;
    let term = termNum;
@@ -68,8 +63,8 @@ async function getImages(inputJSON: ReturnedJSON[] = [], offset = 0, termNum = 0
    // most searches return much less than however much you set count to
    const count = 400;
    const url = `https://api.cognitive.microsoft.com/bing/v7.0/images/search?q=${searchTerms[term].q}&count=${count}&offset=${offset}&mkt=en-us&safeSearch=Moderate`;
-   const newJSON = await getJSON(url) as ReturnedJSON;
-   await sleep(500);
+   const newJSON = await getJSON(url) as ReturnedBingJSON;
+   await sleep(750);
    // add the new responces to `json`
    json = json.concat(newJSON.value);
 
@@ -93,17 +88,16 @@ async function getImages(inputJSON: ReturnedJSON[] = [], offset = 0, termNum = 0
    return json;
 }
 
-function removeFiltered(json: BingImage[]): BingImage[] {
+function removeFiltered(json: ReturnedBingJSON[]): ReturnedBingJSON[] {
+   const filteredWebsites = selectAllFilters.all().reduce((acc, val) => {
+      acc.push(val.regex);
+      return acc;
+   }, []) as RegExp[];
    let goodJSON = json;
-   // return console.log(`asdf: ${JSON.stringify(goodJSON, null, 2)}`);
    for (const regex of filteredWebsites) {
       const { length } = goodJSON;
-      goodJSON = goodJSON.filter((key: BingImage): boolean => {
-         if (key.url.match(regex)) {
-            return false;
-         }
-         return true;
-      });
+      const expression = new RegExp(regex, 'i');
+      goodJSON = goodJSON.filter((key: ReturnedBingJSON): boolean => !(expression.test(key.contentUrl)));
       console.log(`Removed ${length - goodJSON.length} elements using the ${regex} filter`);
    }
    return goodJSON;
@@ -112,15 +106,8 @@ function removeFiltered(json: BingImage[]): BingImage[] {
 export async function updateBing(): Promise<void> {
    // wait until we get all the images we requested
    const data = await getImages();
-
-   // remove _a lot_ of useless data
-   const dataLite: BingImage[] = data.map(d => ({
-      url: d.contentUrl,
-      id: d.imageId,
-   }));
-
-   // filter out some blacklisted websites
-   const dataFiltered: BingImage[] = removeFiltered(dataLite);
+   // remove websites we blocked with the `filters` table in the db
+   const dataFiltered = removeFiltered(data);
 
    try {
       const badImages = searchFiltered.all();
