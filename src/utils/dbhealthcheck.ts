@@ -11,7 +11,7 @@ const selectAllBing = db.prepare('SELECT * FROM bingcats');
 const deleteChan = db.prepare('DELETE FROM chancats WHERE no = ?');
 const deleteBing = db.prepare('DELETE FROM bingcats WHERE url = ?');
 
-const insertBadUrl = db.prepare('INSERT INTO badurls (url, source) VALUES (? , ?)');
+const insertBadUrl = db.prepare('INSERT OR REPLACE INTO badurls (url, source) VALUES (? , ?)');
 
 let filtered = 0;
 
