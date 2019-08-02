@@ -5,6 +5,18 @@ import { bot } from './bot';
 
 let database: Sqlite.Database;
 
+function execScema(db: Sqlite.Database): void {
+   db.exec('CREATE TABLE IF NOT EXISTS bingcats (id TEXT PRIMARY KEY, url TEXT NOT NULL, height INTEGER NOT NULL, width INTEGER NOT NULL, dateposted TEXT NOT NULL, name TEXT NOT NULL, color TEXT NOT NULL) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS chancats (no TEXT PRIMARY KEY, ext TEXT NOT NULL) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS favorites (uid TEXT PRIMARY KEY, url TEXT NOT NULL) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS filtered (id TEXT PRIMARY KEY, source TEXT NOT NULL) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS threads (id INTEGER PRIMARY KEY, no TEXT NOT NULL) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS reports (url TEXT PRIMARY KEY, num INTEGER NOT NULL, source TEXT NOT NULL) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS badurls (url TEXT PRIMARY KEY, source TEXT NOT NULL) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS boorucats (url TEXT PRIMARY KEY, source TEXT, height INTEGER NOT NULL, width INTEGER NOT NULL, score INTEGER NOT NULL, tags TEXT) WITHOUT ROWID');
+   db.exec('CREATE TABLE IF NOT EXISTS filters (regex TEXT PRIMARY KEY, source TEXT NOT NULL)');
+}
+
 class Database {
    private options: object = {};
 
@@ -20,6 +32,7 @@ class Database {
       }
       database = new Sqlite(`./${process.env.dbFile}.db`, this.options);
       database.pragma('journal_mode = WAL');
+      execScema(database);
       this.db = database;
    }
 }
