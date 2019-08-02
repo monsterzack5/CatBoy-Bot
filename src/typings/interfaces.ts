@@ -77,11 +77,16 @@ export interface LookUpTable {
    [index: string]: number;
 }
 
-export interface ReturnedJSON {
-   value: ReturnedJSON[];
+export interface ReturnedBingJSON {
+   value: ReturnedBingJSON[];
    nextOffset: number;
    contentUrl: string;
    imageId: string;
+   height: string;
+   width: string;
+   name: string;
+   datePublished: string;
+   accentColor: string;
 }
 
 export interface BingImage {
@@ -135,4 +140,11 @@ export interface DiscordEmbedReply {
 
 export interface CommandFunction {
    (message: Message, args: string[]): void | Promise<void>;
+}
+
+export type RatioTuple = [RatioObject, RatioObject, RatioObject];
+
+export interface RatioObject {
+   source: () => DiscordEmbedImageReply;
+   ratio: number;
 }
