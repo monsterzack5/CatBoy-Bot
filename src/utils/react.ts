@@ -9,10 +9,12 @@ const updateReport = db.prepare('UPDATE reports SET num = ? WHERE url = ?');
 const deleteChan = db.prepare('DELETE FROM chancats WHERE no = ?');
 const deleteBing = db.prepare('DELETE FROM bingcats WHERE id = ?');
 const deleteReport = db.prepare('DELETE FROM reports WHERE url = ?');
+const deleteBooru = db.prepare('DELETE FROM boorucats WHERE url = ?');
 
 const searchBing = db.prepare('SELECT * FROM bingcats WHERE url = ?');
 const searchFiltered = db.prepare('SELECT * FROM filtered WHERE id = ?');
 const searchReports = db.prepare('SELECT * FROM reports WHERE url = ?');
+const searchBooru = db.prepare('SELECT * FROM boorucats WHERE url = ?');
 
 export function handleFavorite(userID: string, url: string): void {
    insertFav.run(userID, url);
@@ -49,16 +51,19 @@ export function handleFilter(url: string, msg: Message): void {
       msg.react('🇫');
       return;
    }
-   // we're here if its a booru cat
-   const isFiltered = searchFiltered.get(url);
-   if (isFiltered) {
+   const isBooru = searchBooru.get(url);
+   if (isBooru) {
+      const isFiltered = searchFiltered.get(url);
+      if (isFiltered) {
+         deleteReport.run(url);
+         msg.react('🦀');
+         return;
+      }
+      insertFilter.run(isBooru.url, 'booru');
+      deleteBooru.run(isBooru.url);
       deleteReport.run(url);
-      msg.react('🦀');
-      return;
+      msg.react('🇫');
    }
-   insertFilter.run(url, 'booru');
-   deleteReport.run(url);
-   msg.react('🇫');
 }
 
 export function handleReport(url: string, msg: Message): void {
