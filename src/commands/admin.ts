@@ -3,6 +3,7 @@ import { exportFile } from '../utils/fileLoader';
 import { updateChan } from '../utils/4chan';
 import { updateBing } from '../utils/bing';
 import { checkHealth } from '../utils/dbhealthcheck';
+import { updateBooru } from '../utils/booru';
 
 // TODO: make some functions return values so we can print them out, see: logger
 export default (message: Message, args: string[]): void => {
@@ -24,14 +25,19 @@ export default (message: Message, args: string[]): void => {
 
 
       case 'update4chan':
-         message.channel.send('Updating 4chan imagedb');
+         message.channel.send('Updating the 4chan imagedb');
          updateChan();
          break;
 
 
       case 'updatebing':
          updateBing();
-         message.channel.send('Updating bing db!');
+         message.channel.send('Updating the bing db!');
+         break;
+
+      case 'updatebooru':
+         updateBooru();
+         message.channel.send('Updating the booru db!');
          break;
 
       case 'checkhealth':
