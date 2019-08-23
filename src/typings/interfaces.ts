@@ -41,12 +41,17 @@ export interface Post {
 }
 
 export interface ImagePost {
-   tim: number;
-   ext: string;
    no: number;
    sub: string;
    com: string;
    filename: string;
+   ext: string;
+   w: number;
+   h: number;
+   tim: number;
+   md5: string;
+   fsize: number;
+   resto: number;
 }
 
 export interface CatalogPage {
@@ -57,6 +62,7 @@ export interface CatalogPage {
 export interface ThreadResponse extends Post {
    posts: Post[];
 }
+
 export interface StoredMessage {
    time: number;
    auth: string;
