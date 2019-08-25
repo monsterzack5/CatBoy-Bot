@@ -1,10 +1,11 @@
 import http from 'http';
 import { schedule, ScheduledTask } from 'node-cron';
 import { existsSync, mkdirSync } from 'fs';
-import { exportFile } from './utils/fileLoader';
-import { db } from './utils/db';
-import { updateChan } from './utils/4chan';
-import { checkHealth } from './utils/dbhealthcheck';
+import { exportFile } from './fileLoader';
+import { db } from './db';
+import { updateChan } from './4chan';
+import { checkHealth } from './dbhealthcheck';
+import { bot } from './bot';
 
 const port = process.env.PORT || 5010;
 let httpServer: http.Server;
@@ -31,11 +32,11 @@ export function startTimers(): void {
       if (!existsSync('./tmp/')) {
          mkdirSync('./tmp/');
       }
-      await updateChan();
       try {
+         await updateChan();
          await db.backup(`./tmp/${process.env.dbFile}.db`);
       } catch (e) {
-         console.error(`Error! Failed to backup the db!\n${e} `);
+         console.error(`Error!\n${e} `);
       }
       await exportFile(`./tmp/${process.env.dbFile}.db`);
    });
@@ -43,7 +44,7 @@ export function startTimers(): void {
    dbHeathCheck = schedule('0 23 * * *', () => {
       checkHealth();
    });
-   
+
    // updates our bing catboy db once a day at 1pm
    // disabled until further notice
    // schedule('0 13 * * *', (): void => {
@@ -51,9 +52,29 @@ export function startTimers(): void {
    // });
 }
 
-export function stopTimers(): void {
+async function stopBot(doArchive?: boolean): Promise<void> {
+   console.log('Goodbye!');
+   db.close();
    httpServer.close();
-   clearInterval(herokuPing);
    dbBackup.destroy();
    dbHeathCheck.destroy();
+   clearInterval(herokuPing);
+   if (doArchive) {
+      await exportFile(`${process.env.dbFile}.db`, true);
+   } else {
+      await exportFile(`${process.env.dbFile}.db`);
+   }
+   bot.destroy();
+   return Promise.resolve();
 }
+
+process.on('SIGINT', async (): Promise<void> => {
+   await stopBot();
+   process.exit(0);
+});
+
+// only archive the database on sigterm
+process.on('SIGTERM', async (): Promise<void> => {
+   await stopBot(true);
+   process.exit(0);
+});
