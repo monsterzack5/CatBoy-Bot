@@ -11,8 +11,7 @@ export default async (message: Message): Promise<void> => {
    let username = '';
 
    if (mention) {
-      ({ id } = mention.user);
-      ({ username } = mention.user);
+      ({ id, username } = mention.user);
    }
    const catboy = search.get(id);
    if (catboy) {
