@@ -158,19 +158,6 @@ export async function updateChan(): Promise<void> {
       insertThread.run(newThread);
    }
 
-   // if no goodThreads are returned, but we have archived threads, we're ok
-   // if no goodThreads are returned, and there are no savedThreads
-   // clear the table
-   if (!goodThreads.length && !savedThreads.length) {
-      const count = selectCount.get()['COUNT(*)'];
-      if (count !== 0) {
-         db.exec('DELETE FROM chancats');
-         db.exec('VACCUM');
-         updateRatios();
-      }
-      return;
-   }
-
    const allThreadInfo = (await Promise.all(goodThreads.map(thread => getThread(thread)))).filter(x => x !== undefined);
    // return if no good threadInfo was returned, ie no thread has been modified
    if (!allThreadInfo.length) {
