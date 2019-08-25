@@ -15,7 +15,6 @@ const updateLastMod = db.prepare('UPDATE threads SET lastmodified = ? WHERE no =
 const selAliveThreads = db.prepare('SELECT no FROM threads WHERE status = \'alive\' OR status = \'archived\'');
 const selectLastMod = db.prepare('SELECT lastmodified FROM threads WHERE no = ?');
 const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'chan\'');
-const selectCount = db.prepare('SELECT COUNT(*) FROM chancats');
 
 const deleteChan = db.prepare('DELETE FROM chancats WHERE no = ?');
 
