@@ -64,7 +64,7 @@ bot.on('ready', async (): Promise<void> => {
    // antispam function
    ({ checkAntiSpam } = await import('./utils/antispam'));
    // starts our autoupdate timers
-   ({ startTimers } = await import('./timers'));
+   ({ startTimers } = await import('./utils/timers'));
    startTimers();
 
 
