@@ -34,7 +34,8 @@
       "@typescript-eslint/explicit-function-return-type": ["error", {
          "allowExpressions": true
       }],
-      "@typescript-eslint/no-non-null-assertion": "off"
+      "@typescript-eslint/no-non-null-assertion": "off",
+      "@typescript-eslint/camelcase": ["properties", 0]
    },
    "settings": {
       "import/resolver": {
