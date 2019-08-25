@@ -15,7 +15,6 @@ export default async (message: Message): Promise<void> => {
    }
 
    const stats = selectStats.get(id);
-   console.log(`stats:\n${JSON.stringify(stats, null, 2)}`);
    if (stats) {
       const color = parseInt((randomColor() as string).substring(1), 16);
       const total = Object.values(selectSum.get() as Total).reduce((acc, val) => (acc + val), 0);
@@ -23,7 +22,7 @@ export default async (message: Message): Promise<void> => {
       message.channel.send({
          embed: {
             color,
-            description: `In total, **${username}** sent **${userTotal}** catboys, which is **${((total / userTotal) * 100).toFixed(2)}%** of total catboys!
+            description: `In total, **${username}** sent **${userTotal}** catboys, which is **${((userTotal/ total) * 100).toFixed(2)}%** of total catboys!
             From booru's: **${stats.booru}**, 
             From bing: **${stats.bing}**, 
             From an image board: **${stats.chan}**`,
