@@ -63,9 +63,7 @@ export async function exportFile(fName: string, isArchive?: boolean): Promise<bo
       const archive = bot.channels.get(process.env.archiveChannel as string) as TextChannel;
       if (archive) {
          await archive.send({ files: [fileName] });
-         return true;
       }
-      return false;
    }
    const msgs = await channel.fetchMessages();
    const file = msgs.find(m => !!(m.attachments.size
