@@ -20,6 +20,7 @@
       "@typescript-eslint"
    ],
    "rules": {
+      "indent": "off",
       "@typescript-eslint/indent": ["error", 3, {
          "SwitchCase": 1
       }],
@@ -35,7 +36,9 @@
          "allowExpressions": true
       }],
       "@typescript-eslint/no-non-null-assertion": "off",
-      "@typescript-eslint/camelcase": ["error", { "properties": "never" }]
+      "@typescript-eslint/camelcase": ["error", {
+         "properties": "never"
+      }]
    },
    "settings": {
       "import/resolver": {
