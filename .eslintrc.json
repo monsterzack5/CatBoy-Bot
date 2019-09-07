@@ -35,7 +35,7 @@
          "allowExpressions": true
       }],
       "@typescript-eslint/no-non-null-assertion": "off",
-      "@typescript-eslint/camelcase": ["properties", 0]
+      "@typescript-eslint/camelcase": ["error", { "properties": "never" }]
    },
    "settings": {
       "import/resolver": {
