@@ -28,9 +28,11 @@ export function checkAntiSpam(msgAuthorId: string, command: string): boolean {
       return false;
    }
 
+   // get the timeLimit for the command, or default to 1s for botActions
+   const timeLimit = lookUpTable[command] || 1000;
    // if the message time is less than the allowed time
    // then the message isn't spam.
-   if (oldMessage.time < (Date.now() - lookUpTable[command])) {
+   if (oldMessage.time < (Date.now() - timeLimit)) {
       messages = messages.filter(msg => msg.auth !== msgAuthorId
          && msg.cmd !== command);
       pushToMessages(msgAuthorId, command);

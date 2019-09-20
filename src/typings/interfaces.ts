@@ -134,3 +134,7 @@ export interface RatioObject {
 export interface Total {
    [key: number]: number;
 }
+
+export interface SortedList {
+   [key: string]: number;
+}

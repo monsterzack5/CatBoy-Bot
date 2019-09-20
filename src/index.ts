@@ -14,14 +14,15 @@ if (!checkRequired()) throw new Error('Error! Enviorment Variables not set!');
 let handleFavorite: (userID: string, url: string) => void;
 let handleFilter: (url: string, msg: Message) => void;
 let handleReport: (url: string, msg: Message) => void;
-let createCommandsMap: () => Promise<Map<string, Command>>;
-let createCommandsEmbed: () => DiscordEmbedReply;
 let checkAntiSpam: (msgAuthorId: string, command: string) => boolean;
 let startTimers: () => void;
+let handleBotActions: (message: Message, command: string, count: number) => void;
+let getBotActions: () => Map<string, number>;
 
-// variables to store our command map and help embed
+// variables to store our command map, help embed, and possible bot Actions
 let commands: Map<string, Command>;
 let commandsEmbed: DiscordEmbedReply;
+let botActions: Map<string, number>;
 
 // do different things in dev vs prod mode
 if (process.env.NODE_ENV === 'dev') {
@@ -55,9 +56,13 @@ bot.on('ready', async (): Promise<void> => {
 
    // import commandhandler.ts, which will import all the files in the commands folder
    // which will export the commandMap and the help embed
-   ({ createCommandsMap, createCommandsEmbed } = await import('./utils/commandhandler'));
+   const { createCommandsMap, createCommandsEmbed } = await import('./utils/commandhandler');
    commands = await createCommandsMap();
    commandsEmbed = createCommandsEmbed();
+
+   // load 2 functions for getting and handling bot actions
+   ({ handleBotActions, getBotActions } = await import('./utils/botActions'));
+   botActions = getBotActions();
 
    // handlers for reactions
    ({ handleFavorite, handleFilter, handleReport } = await import('./utils/react'));
@@ -86,10 +91,11 @@ bot.on('message', (message: Message): void => {
       const messageArguments = message.content.slice((process.env.prefix as string).length).split(' ');
       const command = messageArguments.shift() as string;
       const cmdfunction: CommandFunction = commands.get(command) as Command;
-      if (cmdfunction) {
-         const isSpam = checkAntiSpam(message.author.id, command);
-         if (!isSpam) {
-            cmdfunction(message, messageArguments);
+      const count = botActions.get(command);
+      if (cmdfunction || count) {
+         if (!checkAntiSpam(message.author.id, command)) {
+            if (cmdfunction) cmdfunction(message, messageArguments);
+            if (count) handleBotActions(message, command, count);
          } else {
             message.react('⏲');
          }
@@ -125,3 +131,7 @@ bot.on('raw', async (data: RawReactData): Promise<void> => {
       }
    }
 });
+
+export function reloadActions(): void {
+   botActions = getBotActions();
+}
