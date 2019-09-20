@@ -12,7 +12,6 @@ export function getBotActions(): Map<string, number> {
       prev[cur] = (prev[cur] || 0) + 1; // eslint-disable-line no-param-reassign
       return prev;
    }, {});
-   console.log(`sortedActions: ${JSON.stringify(sortedActions, null, 2)}`);
    return new Map(Object.entries(sortedActions));
 }
 
