@@ -56,9 +56,9 @@ bot.on('ready', async (): Promise<void> => {
 
    // import commandhandler.ts, which will import all the files in the commands folder
    // which will export the commandMap and the help embed
-   const { createCommandsMap, createCommandsEmbed } = await import('./utils/commandhandler');
+   const { createCommandsMap, createHelpEmbed } = await import('./utils/commandhandler');
    commands = await createCommandsMap();
-   commandsEmbed = createCommandsEmbed();
+   commandsEmbed = createHelpEmbed();
 
    // load 2 functions for getting and handling bot actions
    ({ handleBotActions, getBotActions } = await import('./utils/botActions'));
