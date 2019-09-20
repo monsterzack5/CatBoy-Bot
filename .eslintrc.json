@@ -38,7 +38,8 @@
       "@typescript-eslint/no-non-null-assertion": "off",
       "@typescript-eslint/camelcase": ["error", {
          "properties": "never"
-      }]
+      }],
+      "arrow-parens": "off"
    },
    "settings": {
       "import/resolver": {
