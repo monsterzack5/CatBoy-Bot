@@ -71,7 +71,6 @@ export default (message: Message, args: string[]): void => {
                message.channel.send('Err! An action with the given url already exists!');
                return;
             }
-            console.log(`addaction: trying to add action ${args[1]} with url ${args[2]}`);
             insertAction.run(args[2], args[1].toLowerCase());
             reloadActions();
             message.channel.send(`Added action: \`${args[1]}\` with url: \`${args[2]}\``);
@@ -82,7 +81,6 @@ export default (message: Message, args: string[]): void => {
 
       case 'deleteaction':
          if (args[1] && args.length) {
-            console.log(`deleteaction: trying to delete action from url \`${args[2]}\``);
             const didDelete = deleteAction.run(args[1]);
             if (didDelete.changes) {
                message.channel.send(`Deleted url: \`${args[1]}\` from actions table`);

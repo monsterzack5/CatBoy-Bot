@@ -1,8 +1,9 @@
 import { readdirSync } from 'fs';
 import randomColor from 'randomcolor';
-import { LookUpTable, Command, DiscordEmbedReply } from '../typings/interfaces';
-
-// Variables
+import { getBotActions } from './botActions';
+import {
+   LookUpTable, Command, DiscordEmbedReply,
+} from '../typings/interfaces';
 
 // var to cache all the command files
 let cmdFiles: Command[];
@@ -34,24 +35,29 @@ export async function createCommandsMap(): Promise<Map<string, Command>> {
       }
    } catch (e) {
       console.error('Error importing commands, malformed command file!');
-      process.exit(123);
+      process.exit(1);
    }
    return botCommands;
 }
 
 // creates the help embed
-export function createCommandsEmbed(): DiscordEmbedReply {
+export function createHelpEmbed(): DiscordEmbedReply {
    if (!cmdFiles) {
-      console.error(new Error('Error! Failed to create help emend, did you load the files first?'));
-      process.exit(123);
+      console.error(new Error('Error! Failed to create help embed, did you load the files first?'));
+      process.exit(1);
    }
    const commandDesc: string[] = [];
+   const botActions = getBotActions();
    for (const command of cmdFiles) {
       if (command.help.help) {
          commandDesc.push(`**${process.env.prefix}${command.help.name}**: ${command.help.help}\n`);
       }
    }
-   commandDesc.push('\nsee any BAD catboys? report them by reacting with :pouting_cat:!');
+   const actions = [...botActions.keys()].reduce((acc, key) => `${acc}, *${process.env.prefix}${key}*`, '').slice(2);
+   if (botActions.size) {
+      commandDesc.push(`\n**User interactions!** ${actions}`);
+   }
+   commandDesc.push('\n\nsee any BAD catboys? report them by reacting with :pouting_cat:!');
    const color = parseInt((randomColor() as string).substring(1), 16);
    return {
       embed: {
@@ -66,7 +72,7 @@ export function createCommandsEmbed(): DiscordEmbedReply {
 export function createTimeOutTable(): LookUpTable {
    if (!cmdFiles) {
       console.error(new Error('Error! Failed to create antispam lookup table, did you load the files first?'));
-      process.exit(123);
+      process.exit(1);
    }
    for (const command of cmdFiles) {
       if (!command.help.timeout) command.help.timeout = defaultTimeLimit;
