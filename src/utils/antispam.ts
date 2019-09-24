@@ -24,7 +24,7 @@ export function checkAntiSpam(msgAuthorId: string, command: string): boolean {
 
    // if the message time is less than the allowed time
    // then the message isn't spam.
-   if (lastTimeCalled.time < (Date.now() - lookUpTable[command] || 1000)) {
+   if (lastTimeCalled.time < (Date.now() - (lookUpTable[command] || 1000))) {
       updateLastCommand.run(Date.now(), msgAuthorId, command);
       return false;
    }
