@@ -2,7 +2,7 @@ import http from 'http';
 import { schedule, ScheduledTask } from 'node-cron';
 import { existsSync, mkdirSync } from 'fs';
 import { exportFile } from './fileLoader';
-import { db } from './db';
+import { db, memDb } from './db';
 import { updateChan } from './4chan';
 import { checkHealth } from './dbhealthcheck';
 import { bot } from './bot';
@@ -55,6 +55,7 @@ export function startTimers(): void {
 async function stopBot(doArchive?: boolean): Promise<void> {
    console.log('Goodbye!');
    db.close();
+   memDb.close();
    httpServer.close();
    dbBackup.destroy();
    dbHeathCheck.destroy();
