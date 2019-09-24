@@ -7,12 +7,6 @@ import {
 
 // var to cache all the command files
 let cmdFiles: Command[];
-// map of all botCommands, will be exported to index.ts
-const botCommands = new Map();
-// lookup table we will export to antispam.ts
-const lookUpTable: LookUpTable = {};
-// default time limit for a command if none was specified
-const defaultTimeLimit = 1000;
 
 // loads all the cmdFiles at boot, and caches them
 async function loadFiles(): Promise<void> {
@@ -29,6 +23,8 @@ async function loadFiles(): Promise<void> {
 export async function createCommandsMap(): Promise<Map<string, Command>> {
    // since we ALWAYS run this function first, we can treat it as an init function
    await loadFiles();
+   const botCommands = new Map();
+
    try {
       for (const command of cmdFiles) {
          botCommands.set(command.help.name, command.default);
@@ -70,6 +66,9 @@ export function createHelpEmbed(): DiscordEmbedReply {
 
 // creates a lookup table for antispam
 export function createTimeOutTable(): LookUpTable {
+   const defaultTimeLimit = 1000;
+   const lookUpTable: LookUpTable = {};
+
    if (!cmdFiles) {
       console.error(new Error('Error! Failed to create antispam lookup table, did you load the files first?'));
       process.exit(1);
