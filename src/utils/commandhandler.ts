@@ -7,6 +7,7 @@ import {
 
 // var to cache all the command files
 let cmdFiles: Command[];
+const botActions = getBotActions();
 
 // loads all the cmdFiles at boot, and caches them
 async function loadFiles(): Promise<void> {
@@ -33,7 +34,8 @@ export async function createCommandsMap(): Promise<Map<string, Command>> {
       console.error('Error importing commands, malformed command file!');
       process.exit(1);
    }
-   return botCommands;
+   // merge botCommands map with botActions map, return merged
+   return new Map([...botCommands, ...botActions]);
 }
 
 // creates the help embed
@@ -43,7 +45,7 @@ export function createHelpEmbed(): DiscordEmbedReply {
       process.exit(1);
    }
    const commandDesc: string[] = [];
-   const botActions = getBotActions();
+   // const botActions = getBotActions();
    for (const command of cmdFiles) {
       if (command.help.help) {
          commandDesc.push(`**${process.env.prefix}${command.help.name}**: ${command.help.help}\n`);

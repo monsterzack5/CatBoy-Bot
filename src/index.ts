@@ -17,12 +17,11 @@ let handleReport: (url: string, msg: Message) => void;
 let checkAntiSpam: (msgAuthorId: string, command: string) => boolean;
 let startTimers: () => void;
 let handleBotActions: (message: Message, command: string, count: number) => void;
-let getBotActions: () => Map<string, number>;
+let getBotActions: (oldCommands?: Map<string, number | Command>) => Map<string, number | Command>;
 
 // variables to store our command map, help embed, and possible bot Actions
-let commands: Map<string, Command>;
+let commands: Map<string, number | Command>;
 let commandsEmbed: DiscordEmbedReply;
-let botActions: Map<string, number>;
 
 // do different things in dev vs prod mode
 if (process.env.NODE_ENV === 'dev') {
@@ -60,10 +59,8 @@ bot.on('ready', async (): Promise<void> => {
    commands = await createCommandsMap();
    commandsEmbed = createHelpEmbed();
 
-   // load 2 functions for getting and handling bot actions
+   // handler for botActions
    ({ handleBotActions, getBotActions } = await import('./utils/botActions'));
-   botActions = getBotActions();
-
    // handlers for reactions
    ({ handleFavorite, handleFilter, handleReport } = await import('./utils/react'));
    // antispam function
@@ -83,19 +80,18 @@ bot.on('ready', async (): Promise<void> => {
 bot.on('message', (message: Message): void => {
    if (message.author.bot) return;
    if (message.channel.type !== 'text'
-      && message.author.id !== process.env.botOwner) {
+   && message.author.id !== process.env.botOwner) {
       message.react('🤔');
       return;
    }
    if (message.content.startsWith(process.env.prefix as string)) {
       const messageArguments = message.content.slice((process.env.prefix as string).length).split(' ');
       const command = messageArguments.shift() as string;
-      const cmdfunction: CommandFunction = commands.get(command) as Command;
-      const count = botActions.get(command);
-      if (cmdfunction || count) {
+      const commandFuncOrCount: CommandFunction = commands.get(command) as Command;
+      if (commandFuncOrCount) {
          if (!checkAntiSpam(message.author.id, command)) {
-            if (cmdfunction) cmdfunction(message, messageArguments);
-            if (count) handleBotActions(message, command, count);
+            if (typeof commandFuncOrCount !== 'number') commandFuncOrCount(message, messageArguments);
+            else handleBotActions(message, command, commandFuncOrCount);
          } else {
             message.react('⏲');
          }
@@ -111,7 +107,7 @@ bot.on('message', (message: Message): void => {
 // this handle's reactions to our bot's messages
 bot.on('raw', async (data: RawReactData): Promise<void> => {
    if (data.t === 'MESSAGE_REACTION_ADD') {
-      const reactChannel = await bot.channels.get(data.d.channel_id) as TextChannel;
+      const reactChannel = bot.channels.get(data.d.channel_id) as TextChannel;
       if (!reactChannel) {
          // this means we dont have permission to read the channel history
          return;
@@ -132,5 +128,5 @@ bot.on('raw', async (data: RawReactData): Promise<void> => {
 });
 
 export function reloadActions(): void {
-   botActions = getBotActions();
+   commands = getBotActions(commands);
 }
