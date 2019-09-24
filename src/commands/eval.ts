@@ -1,9 +1,8 @@
 import { Message } from 'discord.js';
 import { inspect } from 'util';
-import { checkAdmin } from '../utils/checkAdmin';
 
 export default (message: Message, args: string[]): void => {
-   if (!checkAdmin(message.author.id)) {
+   if (message.author.id !== process.env.botOwner) {
       message.react('❌');
       return;
    }
