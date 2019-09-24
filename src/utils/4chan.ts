@@ -3,8 +3,9 @@ import { OutgoingHttpHeaders } from 'http';
 import { db } from './db';
 import { updateRatios } from '../commands/catboy';
 import {
-   ChanImage, Post, ImagePost, CatalogPage, ThreadResponse,
+   ChanImage, Post, ImagePost, CatalogPage, ThreadResponse, ArchivedThreads,
 } from '../typings/interfaces';
+import { logger } from './logger';
 
 const insertImages = db.prepare('INSERT INTO chancats (no, ext, height, width, filesize, md5, op) VALUES(?, ?, ?, ?, ?, ?, ?)');
 const insertThread = db.prepare('INSERT INTO threads (no, status) VALUES(?, \'alive\')');
@@ -70,7 +71,7 @@ async function getCatalog(): Promise<CatalogPage[] | void> {
       });
       return req.body;
    } catch (e) {
-      return console.error(`Error Getting catalog info:\n${e}`);
+      return logger.error('getCatalog::4chan', e);
    }
 }
 
@@ -96,22 +97,30 @@ async function getThread(thread: string): Promise<ThreadResponse | void> {
       }
       return req.body;
    } catch (e) {
-      return console.error(`Error Getting thread info:\n${e}`);
+      return logger.error('getThread::4chan', e);
    }
 }
 
-async function checkArchive(threads: string[]): Promise<{ deletedThreads: string[]; archivedThreads: string[] }> {
-   const req = await got('https://a.4cdn.org/cm/archive.json', {
-      headers: {
-         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36)',
-      },
-      json: true,
-   });
-   const archived: string[] = req.body.map((x: number) => x.toString());
-   return {
-      deletedThreads: threads.filter(x => !archived.includes(x)),
-      archivedThreads: threads.filter(x => archived.includes(x)),
-   };
+async function checkArchive(threads: string[]): Promise<ArchivedThreads> {
+   try {
+      const req = await got('https://a.4cdn.org/cm/archive.json', {
+         headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36)',
+         },
+         json: true,
+      });
+      const archived: string[] = req.body.map((x: number) => x.toString());
+      return {
+         deletedThreads: threads.filter(x => !archived.includes(x)),
+         archivedThreads: threads.filter(x => archived.includes(x)),
+      };
+   } catch (e) {
+      logger.error('checkArchive::4chan', e);
+      return {
+         deletedThreads: [],
+         archivedThreads: [],
+      };
+   }
 }
 
 function checkThread(singleThread: Post): boolean {
@@ -190,6 +199,6 @@ export async function updateChan(): Promise<void> {
       insertImagesRemoveFiltered(imgLinks, badPosts);
       updateRatios();
    } catch (e) {
-      console.error(`Error! Failed to update the 4chan cats!\n${e}`);
+      logger.error('updateChan::4chan', e);
    }
 }

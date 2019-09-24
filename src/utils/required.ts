@@ -7,7 +7,9 @@ export function checkRequired(): boolean {
       && process.env.configFileDev
       && process.env.dbFile
       && process.env.dbFileDev
-      && process.env.bingToken) {
+      && process.env.bingToken
+      && process.env.loggingChannel
+      && process.env.errorsChannel) {
       return true;
    }
    return false;

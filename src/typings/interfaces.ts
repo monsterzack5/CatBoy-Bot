@@ -138,3 +138,8 @@ export interface Total {
 export interface SortedList {
    [key: string]: number;
 }
+
+export interface ArchivedThreads {
+   deletedThreads: string[];
+   archivedThreads: string[];
+}

@@ -1,3 +1,11 @@
 import Discord from 'discord.js';
 
-export const bot = new Discord.Client();
+class Bot {
+   public bot!: Discord.Client;
+
+   constructor() {
+      this.bot = new Discord.Client();
+   }
+}
+
+export const { bot } = new Bot();

@@ -1,11 +1,14 @@
 import { Message } from 'discord.js';
 import { inspect } from 'util';
+import { logger } from '../utils/logger';
 
 export default (message: Message, args: string[]): void => {
    if (message.author.id !== process.env.botOwner) {
       message.react('❌');
       return;
    }
+
+   logger.log('default::eval: Eval command used');
 
    try {
       const code = args.join(' ');

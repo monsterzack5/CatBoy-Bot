@@ -7,6 +7,7 @@ import { updateBooru } from '../utils/booru';
 import { db } from '../utils/db';
 import { reloadActions } from '../index';
 import { checkAdmin } from '../utils/checkAdmin';
+import { logger } from '../utils/logger';
 
 // SQlite calls for botActions
 const listActions = db.prepare('SELECT DISTINCT action from botactions');
@@ -81,6 +82,7 @@ export default (message: Message, args: string[]): void => {
             insertAction.run(args[2], args[1].toLowerCase());
             reloadActions();
             message.channel.send(`Added action: \`${args[1]}\` with url: \`${args[2]}\``);
+            logger.log(`addaction::admin: action: ${args[1]} added with url \`${args[2]}\``);
          } else {
             message.channel.send('Err! Incorrect format, correct format is addaction <action> <url>');
          }
@@ -91,6 +93,7 @@ export default (message: Message, args: string[]): void => {
             const didDelete = deleteAction.run(args[1]);
             if (didDelete.changes) {
                message.channel.send(`Deleted url: \`${args[1]}\` from actions table`);
+               logger.log(`deleteaction::admin: deleted url: \`${args[1]}\``);
             } else {
                message.channel.send('Err! DB Reported no changes made. (Did you enter the url correctly?)');
             }
@@ -104,6 +107,11 @@ export default (message: Message, args: string[]): void => {
          break;
 
       case 'addadmin':
+         if (message.author.id !== process.env.botOwner) {
+            message.react('❌');
+            logger.warn(`addadmin::admin: Existing Admin: ${message.author.id} tried to add an admin with uid: ${args[1]}`);
+            return;
+         }
          if (args[1].length < 17) {
             message.channel.send('Err! Incorrect userid provided!');
          } else {
@@ -113,17 +121,24 @@ export default (message: Message, args: string[]): void => {
             } else {
                insertAdmin.run(args[1]);
                message.channel.send('Admin successfully added!');
+               logger.log(`addadmin::admin: Added Admin with uid ${args[1]}`);
             }
          }
          break;
 
       case 'deleteadmin':
+         if (message.author.id !== process.env.botOwner) {
+            message.react('❌');
+            logger.warn(`deleteadmin::admin: Existing Admin: ${message.author.id} tried to delete the admin with uid: ${args[1]}`);
+            return;
+         }
          if (args[1].length < 17) {
             message.channel.send('Err! Incorrect userid provided!');
          } else {
             const isDeleted = deleteAdmin.run(args[1]);
             if (isDeleted.changes) {
                message.channel.send('Admin deleted successfully!');
+               logger.log(`deleteadmin::admin: Deleted Admin with uid ${args[1]}`);
             } else {
                message.channel.send('Err! db reported no changes, do you have the correct userid?');
             }

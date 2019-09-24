@@ -4,6 +4,7 @@ import { exportFile } from '../utils/fileLoader';
 import { bot } from '../utils/bot';
 import { ConfigOptions } from '../typings/interfaces';
 import { checkAdmin } from '../utils/checkAdmin';
+import { logger } from '../utils/logger';
 
 const gameStates = ['playing', 'watching', 'listening', 'streaming'];
 
@@ -11,6 +12,7 @@ function updateConfig(config: ConfigOptions): void {
    if (config.gameUrl === '') {
       bot.user.setActivity(config.game, { type: config.gameState });
    } else bot.user.setActivity(config.game, { type: config.gameState, url: config.gameUrl });
+   logger.log(`Updating Game to: ${config.game} Game State: ${config.gameState} Twitch Url: ${config.gameUrl}`);
    writeFileSync(`./${process.env.configFile}.json`, JSON.stringify(config, null, 2));
    exportFile(`${process.env.configFile}.json`);
 }

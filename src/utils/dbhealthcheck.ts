@@ -1,6 +1,7 @@
 import Q from 'p-queue';
 import got from 'got';
 import { db } from './db';
+import { logger } from './logger';
 /**
  * this file is meant to be run once a day, and to check the health of the DB
  * this will http-get all links and make sure they return a 200 status code
@@ -67,5 +68,7 @@ export async function checkHealth(): Promise<void> {
    // wait for 7.5 seconds because onEmpty returns when the Q is empty,
    // not when all the promises are completed
    await new Promise(resolve => setTimeout(resolve, 7500));
-   console.log(`Filtered ${filtered} urls`);
+   if (filtered > 0) {
+      logger.log(`Filtered ${filtered} urls`);
+   }
 }

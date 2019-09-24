@@ -1,6 +1,7 @@
 import { search as booru } from 'booru';
 import SearchResults from 'booru/dist/structures/SearchResults';
 import { db } from './db';
+import { logger } from './logger';
 
 const insertBooru = db.prepare('INSERT OR REPLACE INTO boorucats (url, source, height, width, score, tags) VALUES (?, ?, ?, ?, ?, ?)');
 const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'booru\'');
@@ -60,7 +61,7 @@ export async function updateBooru(): Promise<void> {
       const allFiltered = searchFiltered.all();
       insertImagesRemoveFiltered(allResults.flat(), allFiltered);
    } catch (e) {
-      console.error(`Error! Failed to update the booru cats!\n${e}`);
+      logger.error('updateBooru::booru', e);
    }
    return Promise.resolve();
 }

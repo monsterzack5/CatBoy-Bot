@@ -1,6 +1,7 @@
 import got from 'got';
 import { db } from './db';
 import { ReturnedBingJSON } from '../typings/interfaces';
+import { logger } from './logger';
 
 const insertBing = db.prepare('INSERT OR REPLACE INTO bingcats (id, url, height, width, dateposted, name, color) VALUES (?, ?, ?, ?, ?, ?, ?)');
 const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'bing\'');
@@ -42,7 +43,7 @@ async function getJSON(url: string): Promise<ReturnedBingJSON | void> {
       });
       return req.body;
    } catch (e) {
-      return console.error(`Error Getting bing JSON:\n${e}`);
+      return logger.error('getJSON::bing', e);
    }
 }
 
@@ -95,10 +96,8 @@ function removeFiltered(json: ReturnedBingJSON[]): ReturnedBingJSON[] {
    }, []) as RegExp[];
    let goodJSON = json;
    for (const regex of filteredWebsites) {
-      const { length } = goodJSON;
       const expression = new RegExp(regex, 'i');
       goodJSON = goodJSON.filter((key: ReturnedBingJSON): boolean => !(expression.test(key.contentUrl)));
-      console.log(`Removed ${length - goodJSON.length} elements using the ${regex} filter`);
    }
    return goodJSON;
 }
