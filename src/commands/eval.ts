@@ -1,12 +1,13 @@
 import { Message } from 'discord.js';
-
 import { inspect } from 'util';
+import { checkAdmin } from '../utils/checkAdmin';
 
 export default (message: Message, args: string[]): void => {
-   if (message.author.id !== process.env.botOwner) {
+   if (!checkAdmin(message.author.id)) {
       message.react('❌');
       return;
    }
+
    try {
       const code = args.join(' ');
       // eslint-disable-next-line no-eval

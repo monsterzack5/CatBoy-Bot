@@ -1,5 +1,6 @@
 import { Message } from 'discord.js';
 import { db } from './db';
+import { checkAdmin } from './checkAdmin';
 
 const insertFav = db.prepare('INSERT OR REPLACE INTO favorites (uid, url) VALUES(?, ?)');
 const insertFilter = db.prepare('INSERT INTO filtered (id, source) VALUES (?, ?)');
@@ -21,8 +22,11 @@ export function handleFavorite(userID: string, url: string): void {
 }
 
 export function handleFilter(url: string, msg: Message): void {
-   // extracting the crab react and the deleteReport to their own function
-   // makes pretty much no difference
+   if (!checkAdmin(msg.author.id)) {
+      msg.react('❌');
+      return;
+   }
+
    if (url.startsWith('https://i.4cdn.org/cm/')) {
       const no = url.substring(22, 35);
       const isFiltered = searchFiltered.get(no);

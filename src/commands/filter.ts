@@ -1,6 +1,7 @@
 import { Message } from 'discord.js';
 import { handleFilter } from '../utils/react';
 import { db } from '../utils/db';
+import { checkAdmin } from '../utils/checkAdmin';
 
 const insertRegExp = db.prepare('INSERT OR REPLACE INTO filters (regex, source) VALUES (?, ?)');
 const searchFilter = db.prepare('SELECT * FROM filters WHERE regex = ?');
@@ -8,10 +9,11 @@ const selectAllFilter = db.prepare('SELECT * FROM filters');
 const deleteFilter = db.prepare('DELETE FROM filters WHERE regex = ?');
 
 export default async (message: Message, args: string[]): Promise<void> => {
-   if (message.author.id !== process.env.botOwner) {
+   if (!checkAdmin(message.author.id)) {
       message.react('❌');
       return;
    }
+
    if (!args.length) {
       const msg = await message.channel.send('Incorrect format, format should be : <prefix>`filter <url>` or `filter add\\remove\\list [regex]`') as Message;
       msg.delete(4500);

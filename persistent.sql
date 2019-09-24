@@ -71,6 +71,10 @@ CREATE TABLE IF NOT EXISTS botactions (
    action TEXT NOT NULL
 ) WITHOUT ROWID;
 
+CREATE TABLE IF NOT EXISTS admins (
+   uid TEXT PRIMARY KEY
+) WITHOUT ROWID;
+
 CREATE TRIGGER IF NOT EXISTS remove_dead_links 
    AFTER UPDATE OF status ON threads WHEN NEW.status = 'dead'
 BEGIN

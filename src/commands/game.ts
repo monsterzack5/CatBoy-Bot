@@ -3,6 +3,7 @@ import { writeFileSync, readFileSync } from 'fs';
 import { exportFile } from '../utils/fileLoader';
 import { bot } from '../utils/bot';
 import { ConfigOptions } from '../typings/interfaces';
+import { checkAdmin } from '../utils/checkAdmin';
 
 const gameStates = ['playing', 'watching', 'listening', 'streaming'];
 
@@ -15,12 +16,12 @@ function updateConfig(config: ConfigOptions): void {
 }
 
 export default (message: Message, args: string[]): void => {
-   const config: ConfigOptions = JSON.parse(readFileSync(`./${process.env.configFile}.json`).toString());
-
-   if (message.author.id !== process.env.botOwner) {
+   if (!checkAdmin(message.author.id)) {
       message.react('❌');
       return;
    }
+
+   const config: ConfigOptions = JSON.parse(readFileSync(`./${process.env.configFile}.json`).toString());
 
    // if the command is just `!game`, we remove the game
    if (!args.length) {

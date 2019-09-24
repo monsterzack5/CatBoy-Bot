@@ -6,15 +6,22 @@ import { checkHealth } from '../utils/dbhealthcheck';
 import { updateBooru } from '../utils/booru';
 import { db } from '../utils/db';
 import { reloadActions } from '../index';
+import { checkAdmin } from '../utils/checkAdmin';
 
+// SQlite calls for botActions
 const listActions = db.prepare('SELECT DISTINCT action from botactions');
 const selectAction = db.prepare('SELECT url FROM botactions WHERE url = ?');
 const insertAction = db.prepare('INSERT INTO botactions (url, action) VALUES (?, ?)');
 const deleteAction = db.prepare('DELETE FROM botactions WHERE url = ?');
 
+// Sqlite calls for adding admins
+const selectAdmin = db.prepare('SELECT * FROM admins WHERE uid = ?');
+const insertAdmin = db.prepare('INSERT INTO admins (uid) VALUES (?)');
+const deleteAdmin = db.prepare('DELETE FROM admins WHERE uid = ?');
+
 // TODO: make some functions return values so we can print them out, see: logger
 export default (message: Message, args: string[]): void => {
-   if (message.author.id !== process.env.botOwner || !args.length) {
+   if (!checkAdmin(message.author.id)) {
       message.react('❌');
       return;
    }
@@ -94,6 +101,33 @@ export default (message: Message, args: string[]): void => {
 
       case 'listactions':
          message.channel.send(`All possible actions are:${listActions.all().reduce((acc, key) => `${acc}\n${key.action}`, '')}`);
+         break;
+
+      case 'addadmin':
+         if (args[1].length < 17) {
+            message.channel.send('Err! Incorrect userid provided!');
+         } else {
+            const alreadyAdmin = selectAdmin.get(args[1]);
+            if (alreadyAdmin) {
+               message.channel.send('Err! userid provided is already an admin!');
+            } else {
+               insertAdmin.run(args[1]);
+               message.channel.send('Admin successfully added!');
+            }
+         }
+         break;
+
+      case 'deleteadmin':
+         if (args[1].length < 17) {
+            message.channel.send('Err! Incorrect userid provided!');
+         } else {
+            const isDeleted = deleteAdmin.run(args[1]);
+            if (isDeleted.changes) {
+               message.channel.send('Admin deleted successfully!');
+            } else {
+               message.channel.send('Err! db reported no changes, do you have the correct userid?');
+            }
+         }
          break;
 
       default:

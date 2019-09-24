@@ -124,8 +124,7 @@ bot.on('raw', async (data: RawReactData): Promise<void> => {
          } else if (data.d.emoji.name === '😾'
             && data.d.user_id !== bot.user.id) {
             handleReport(msg.embeds[0].image.url, msg);
-         } else if (data.d.user_id === process.env.botOwner
-            && data.d.emoji.name === '🇫') {
+         } else if (data.d.emoji.name === '🇫') {
             handleFilter(msg.embeds[0].image.url, msg);
          }
       }
