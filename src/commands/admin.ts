@@ -57,7 +57,7 @@ export default (message: Message, args: string[]): void => {
 
       case 'checkhealth':
          checkHealth();
-         message.channel.send('Checking the health of the db!');
+         message.channel.send('Health checking all URLs! (currently fixing of mycatboy errors wont be fixed, todo)');
          break;
 
       case 'dump':
