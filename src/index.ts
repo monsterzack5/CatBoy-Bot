@@ -12,7 +12,7 @@ if (!checkRequired()) throw new Error('Error! Enviorment Variables not set!');
 
 // functions which will be loaded after discord imports the db
 let handleFavorite: (userID: string, url: string) => void;
-let handleFilter: (url: string, msg: Message) => void;
+let handleFilter: (url: string, msg: Message, userID: string) => void;
 let handleReport: (url: string, msg: Message) => void;
 let checkAntiSpam: (msgAuthorId: string, command: string) => boolean;
 let startTimers: () => void;
@@ -80,7 +80,7 @@ bot.on('ready', async (): Promise<void> => {
 bot.on('message', (message: Message): void => {
    if (message.author.bot) return;
    if (message.channel.type !== 'text'
-   && message.author.id !== process.env.botOwner) {
+      && message.author.id !== process.env.botOwner) {
       message.react('🤔');
       return;
    }
@@ -120,8 +120,9 @@ bot.on('raw', async (data: RawReactData): Promise<void> => {
          } else if (data.d.emoji.name === '😾'
             && data.d.user_id !== bot.user.id) {
             handleReport(msg.embeds[0].image.url, msg);
-         } else if (data.d.emoji.name === '🇫') {
-            handleFilter(msg.embeds[0].image.url, msg);
+         } else if (data.d.emoji.name === '🇫'
+            && data.d.user_id !== bot.user.id) {
+            handleFilter(msg.embeds[0].image.url, msg, data.d.user_id);
          }
       }
    }
