@@ -12,10 +12,12 @@ const selectBing = db.prepare('SELECT * FROM bingcats WHERE url = ?');
 const selectFiltered = db.prepare('SELECT * FROM filtered WHERE id = ?');
 const selectBooru = db.prepare('SELECT * FROM boorucats WHERE url = ?');
 
+const insertBadUrl = db.prepare('INSERT OR REPLACE INTO badurls (url, source) VALUES (? , ?)');
 
 // FIXME: the fallthrough case of a url being bing+booru will
 // result in an sql unique error
 
+// FIXME: check if url is in favs table, fix if so
 function filterChan(url: string): boolean {
    if (url.startsWith('https://i.4cdn.org')) {
       const postNumber = url.substring(22, 35);
@@ -26,6 +28,7 @@ function filterChan(url: string): boolean {
          return wasDeleted.changes > 0;
       }
       insertFilter.run(postNumber, 'chan');
+      insertBadUrl.run(postNumber, 'chan');
       deleteChan.run(postNumber);
       deleteReport.run(url);
       logger.log(`Filtered catboy from chan table with url: \`${url}\``);
@@ -44,6 +47,7 @@ function filterBing(url: string): boolean {
          return wasDeleted.changes > 0;
       }
       insertFilter.run(url, 'bing');
+      insertBadUrl.run(url, 'bing');
       deleteBing.run(url);
       deleteReport.run(url);
       logger.log(`Filtered catboy from bing table with url: \`${url}\``);
@@ -61,6 +65,7 @@ function filterBooru(url: string): boolean {
          const wasDeleted = deleteBooru.run(url);
          return wasDeleted.changes > 0;
       }
+      insertFilter.run(url, 'booru');
       insertFilter.run(url, 'booru');
       deleteBooru.run(url);
       deleteReport.run(url);
