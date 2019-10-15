@@ -1,5 +1,5 @@
 import { Message } from 'discord.js';
-import { handleFilter } from '../utils/react';
+import { filterUrl } from '../utils/filter';
 import { db } from '../utils/db';
 import { checkAdmin } from '../utils/checkAdmin';
 
@@ -55,7 +55,9 @@ export default async (message: Message, args: string[]): Promise<void> => {
       message.channel.send(`Currently active filters:${reply}`);
       return;
    }
-   handleFilter(args[0], message);
+   if (filterUrl(args[0])) {
+      message.channel.send('Url filtered from db!');
+   } else message.channel.send('Error! Url not found in the db!');
 };
 
 export const help = {
