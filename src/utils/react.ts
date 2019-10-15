@@ -4,7 +4,6 @@ import { checkAdmin } from './checkAdmin';
 import { filterUrl } from './filter';
 import { logger } from './logger';
 
-// todo: merge these with an upsert`
 const insertFavorite = db.prepare('INSERT OR REPLACE INTO favorites (uid, url) VALUES(?, ?)');
 const insertReport = db.prepare('INSERT INTO reports (url, num) VALUES (?, 1) ON CONFLICT(url) DO UPDATE SET num = num + 1');
 const selectFiltered = db.prepare('SELECT * FROM filtered WHERE id = ?');
