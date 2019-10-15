@@ -1,35 +1,36 @@
 import Q from 'p-queue';
 import got from 'got';
 import { db } from './db';
+import { filterUrl } from './filter';
 import { logger } from './logger';
-/**
- * this file is meant to be run once a day, and to check the health of the DB
- * this will http-get all links and make sure they return a 200 status code
- */
+
 const selectAllChan = db.prepare('SELECT * FROM chancats');
 const selectAllBing = db.prepare('SELECT * FROM bingcats');
+const selectAllBooru = db.prepare('SELECT * FROM boorucats');
+const selectFiltered = db.prepare('SELECT * FROM filtered WHERE id = ?');
 
-const deleteChan = db.prepare('DELETE FROM chancats WHERE no = ?');
-const deleteBing = db.prepare('DELETE FROM bingcats WHERE url = ?');
+// todo: a reason column seems like a good idea
 
-const insertBadUrl = db.prepare('INSERT OR REPLACE INTO badurls (url, source) VALUES (? , ?)');
-
-let filtered = 0;
-
-function filterUrl(url: string): void {
-   filtered += 1;
-   if (url.startsWith('https://i.4cdn.org/cm/')) {
-      const no = url.substring(22, 35);
-      deleteChan.run(no);
-      insertBadUrl.run(no, 'chan');
-      return;
-   }
-   deleteBing.run(url);
-   insertBadUrl.run(url, 'bing');
-}
-
-async function checkUrl(url: string): Promise<void> {
+async function checUrl(url: string): Promise<void> {
    try {
+      // if the url is filtered, but we're checking it, that means
+      // the url is in the db when it SHOULD BE FILTERED
+      // our filter function has handling for this.
+      if (url.startsWith('https://i.4cdn.org')) {
+         const isAlreadyFiltered = selectFiltered.get(url.substring(22, 35));
+         if (isAlreadyFiltered) {
+            filterUrl(url);
+            return;
+         }
+      } else {
+         // if the url isnt a chan one, we dont need to get a substring
+         const isAlreadyFiltered = selectFiltered.get(url);
+         if (isAlreadyFiltered) {
+            filterUrl(url);
+            return;
+         }
+      }
+      // get send a HEAD request to each url, to check if it returns a 404
       const resp = await got.head(url, {
          headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36',
@@ -43,32 +44,29 @@ async function checkUrl(url: string): Promise<void> {
          return;
       }
    } catch (e) {
-      // the website could be down at the time of running this function
-      // I think the best idea would be to remove the URLs from the main tables
-      // and store them in a possiblybadurls table, where we can check them again. TODO
       filterUrl(url);
    }
 }
 
 export async function checkHealth(): Promise<void> {
+   const startTime = Date.now();
    const queue = new Q({
       concurrency: 15,
       timeout: 7500,
    });
-   filtered = 0;
+
    const chanUrls = selectAllChan.all()
       .map(url => `https://i.4cdn.org/cm/${url.no}${url.ext}`);
    const bingUrls = selectAllBing.all()
       .map(url => url.url);
-   const urls = bingUrls.concat(chanUrls);
-   for (const url of urls) {
-      queue.add(() => checkUrl(url));
+   const booruUrls = selectAllBooru.all()
+      .map(url => url.url);
+   const allCatboyUrls = bingUrls.concat(chanUrls).concat(booruUrls);
+
+   for (const url of allCatboyUrls) {
+      queue.add(() => checUrl(url));
    }
-   await queue.onEmpty();
-   // wait for 7.5 seconds because onEmpty returns when the Q is empty,
-   // not when all the promises are completed
-   await new Promise(resolve => setTimeout(resolve, 7500));
-   if (filtered > 0) {
-      logger.log(`Filtered ${filtered} urls`);
-   }
+   await queue.onIdle();
+   db.exec('VACUUM');
+   logger.log(`Checked db health! time taken: ${(Date.now() - startTime) / 1000} seconds!`);
 }
