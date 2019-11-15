@@ -4,8 +4,8 @@
    "description": "Sends Catboys",
    "main": "dist/index.js",
    "engines": {
-      "node": "^12.4.0",
-      "yarn": "^1.16.0"
+      "node": "^13.0.1",
+      "yarn": "^1.19.1"
    },
    "dependencies": {
       "better-sqlite3": "^5.4.3",
@@ -13,7 +13,7 @@
       "discord.js": "^11.5.1",
       "got": "^9.6.0",
       "node-cron": "^2.0.3",
-      "p-queue": "^6.1.1",
+      "p-queue": "^6.2.1",
       "randomcolor": "^0.5.4"
    },
    "scripts": {
@@ -27,18 +27,17 @@
    "license": "MIT",
    "devDependencies": {
       "@types/better-sqlite3": "^5.4.0",
-      "@types/dotenv": "^6.1.1",
-      "@types/got": "^9.6.7",
-      "@types/node": "^12.7.5",
+      "@types/got": "^9.6.9",
+      "@types/node": "^12.12.7",
       "@types/node-cron": "^2.0.2",
-      "@types/node-fetch": "^2.5.1",
+      "@types/node-fetch": "^2.5.3",
       "@types/randomcolor": "^0.5.3",
-      "@typescript-eslint/eslint-plugin": "^2.3.0",
-      "@typescript-eslint/parser": "^2.3.0",
-      "dotenv": "^8.1.0",
-      "eslint": "^6.4.0",
+      "@typescript-eslint/eslint-plugin": "^2.7.0",
+      "@typescript-eslint/parser": "^2.7.0",
+      "dotenv": "^8.2.0",
+      "eslint": "^6.6.0",
       "eslint-config-airbnb-base": "^14.0.0",
       "eslint-plugin-import": "^2.18.2",
-      "typescript": "^3.6.3"
+      "typescript": "^3.7.2"
    }
 }
