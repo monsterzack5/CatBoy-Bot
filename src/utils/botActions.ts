@@ -13,7 +13,7 @@ export function getBotActions(oldCommands?: Map<string, number | Command>): Map<
       return prev;
    }, {});
    const actionsMap: Map<string, number> = new Map(Object.entries(sortedActions));
-   // if given oldCommands, merge and overwrite oldCommands with new actionsMap
+   // if given oldCommands, merge old commands and new commands
    return (oldCommands ? new Map([...oldCommands, ...actionsMap]) : actionsMap);
 }
 
@@ -28,7 +28,7 @@ export function handleBotActions(message: Message, command: string, count: numbe
    const color = parseInt((randomColor() as string).substring(1), 16);
    const userWhoActed = message.member.nickname || message.member.user.username;
    const userActedUpon = mention.nickname || mention.user.username;
-   const title = (mention.nickname === message.member.nickname)
+   const title = (userWhoActed === userActedUpon)
       ? `**${userWhoActed}** gave themselves a **${command}**!`
       : `**${userActedUpon}**, you got a ${command} from **${userWhoActed}**!`;
    message.channel.send({
