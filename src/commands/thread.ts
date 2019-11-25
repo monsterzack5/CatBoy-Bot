@@ -5,10 +5,9 @@ const selectAlive = db.prepare('SELECT * FROM threads WHERE status = \'alive\'')
 const selectArchived = db.prepare('SELECT * FROM threads WHERE status = \'archived\'');
 
 export default (message: Message): void => {
-   let reply = '';
    const aliveThreads = selectAlive.all();
    const archivedThreads = selectArchived.all();
-   console.log(JSON.stringify(archivedThreads, null, 2));
+   let reply = '';
 
    // if there are no threads
    if (!aliveThreads.length && !archivedThreads.length) {
@@ -17,16 +16,16 @@ export default (message: Message): void => {
    }
 
    if (aliveThreads.length) {
-      reply += 'Alive threads:'
+      reply += 'Alive threads:';
       for (const thread of aliveThreads) {
-         reply += `\nhttps://boards.4channel.org/cm/thread/${thread.no}`;
+         reply += `\nhttps://boards.4channel.org/cm/thread/${thread.postno}`;
       }
    }
 
    if (archivedThreads.length) {
-      reply += '\nArchived Threads:'
+      reply += '\nArchived Threads:';
       for (const archivedThread of archivedThreads) {
-         reply += `\nhttps://boards.4channel.org/cm/thread/${archivedThread.no}`;
+         reply += `\nhttps://boards.4channel.org/cm/thread/${archivedThread.postno}`;
       }
    }
 
@@ -35,5 +34,6 @@ export default (message: Message): void => {
 
 export const help = {
    name: 'thread',
-   // help: 'returns the current 4chan thread(s)',
+   timeout: 5000,
+   help: 'returns the current 4chan thread(s)',
 };
