@@ -2,196 +2,189 @@ import got from 'got';
 import { OutgoingHttpHeaders } from 'http';
 import { db } from './db';
 import { updateRatios } from '../commands/catboy';
-import {
-   ChanImage, Post, ImagePost, CatalogPage, ThreadResponse, ArchivedThreads,
-} from '../typings/interfaces';
 import { logger } from './logger';
+import {
+   Post, ImagePost, ArchivedThreads, FilteredImage, StoredThread,
+} from '../typings/interfaces';
 
-const insertImages = db.prepare('INSERT INTO chancats (no, ext, height, width, filesize, md5, op) VALUES(?, ?, ?, ?, ?, ?, ?)');
-const insertThread = db.prepare('INSERT INTO threads (no, status) VALUES(?, \'alive\')');
+// Constants
+// todo: allow multiple boards
+const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36)';
+const chanBoard = 'cm';
+const regex = /cat\s?boy/i;
 
-const updateStatus = db.prepare('UPDATE threads SET status = ? WHERE no = ?');
-const updateLastMod = db.prepare('UPDATE threads SET lastmodified = ? WHERE no = ?');
 
-const selAliveThreads = db.prepare('SELECT no FROM threads WHERE status = \'alive\' OR status = \'archived\'');
-const selectLastMod = db.prepare('SELECT lastmodified FROM threads WHERE no = ?');
-const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'chan\'');
+// Sqlite Calls
+const insertImage = db.prepare('INSERT INTO chancats (posttime, postno, ext, height, width, filesize, md5, op) VALUES(?, ?, ?, ?, ?, ?, ?, ?)');
+const insertThread = db.prepare('INSERT INTO threads (postno, status) VALUES(?, \'alive\')');
 
-const deleteChan = db.prepare('DELETE FROM chancats WHERE no = ?');
+const updateStatus = db.prepare('UPDATE threads SET status = ? WHERE postno = ?');
+const updateThread = db.prepare('UPDATE threads SET lastmodified = ?, totalposts = ? WHERE postno = ?');
 
-/**
- * Outline of file:
- * catalog: JSON of all threads on board
- * goodThreads: all threadIDs from catalog where thread passes checkThread()
- * savedThreads: string[] of all threadIDs from db where status = alive or archived
- * deadThreads: threadIDs found in DB, that were NOT returned by api
- *    if deadThreads, check if given threads are archived
- *    if archived, change status to archived
- *    if deleted, change sstatus to dead
- * newThreads: threadIDs not in db, that were returned by the api
- * if no returned threads, and no saved threads, delete table, update ratios
- * allThreadInfo: object[] containing JSON from all goodThreads
- * if allThreadinfo is empty, return (when all threads send code 304)
- * for allThreadInfo: get all image posts from every thread JSON, return info object per image
- * badPosts: all filtered images from db
- *
- * functions:
- * getCatalog: returns catalog JSON
- * getThread: checks if url has saved lastmodified time, if so get thread JSON
- *    using an if-modified-since header, if return 304 thread not modified
- *    update last modified time in db if changed
- * checkArchive: gets all archived threadIDs, checks them against inputed threadIDs
- *    deletedThreads: threadIDs in db, that are not archived
- *    archivedThreads: threadIDs in db, that are archived
- *
- * sqlite triggers:
- * remove_dead_links: triggers when `status` column from `threads` table gets
- *    updated to 'dead', remove all rows from `chancats` when OP thread
- *    has been marked 'dead'
- */
+const selAliveThreads = db.prepare('SELECT postno, status FROM threads WHERE status = \'alive\' OR status = \'archived\'');
+const selectThread = db.prepare('SELECT lastmodified, totalposts FROM threads WHERE postno = ?');
+const searchFiltered = db.prepare('SELECT id FROM filtered WHERE source = \'chan\'');
 
-const insertImagesRemoveFiltered = db.transaction((images, badImages): void => {
+const deleteChancat = db.prepare('DELETE FROM chancats WHERE postno = ?');
+const delCatsFromDeadThreads = db.prepare('DELETE FROM chancats WHERE postno = @postno OR op = @postno');
+
+// Lamda for updating the db
+const insertImagesRemoveFiltered = db.transaction((images: ImagePost[], badImages: FilteredImage[]): void => {
    for (const image of images) {
-      // using .toString stops sqlite from appending .0 to integers
-      insertImages.run(image.no.toString(), image.ext, image.height.toString(),
-         image.width.toString(), image.filesize.toString(), image.md5, image.op.toString());
+      insertImage.run(image.tim, image.no, image.ext, image.h,
+         image.w, image.fsize, image.md5, image.resto);
    }
    for (const post of badImages) {
-      deleteChan.run(post.id);
+      deleteChancat.run(post.id);
    }
 });
 
-async function getCatalog(): Promise<CatalogPage[] | void> {
+// returns all the posts on the catalog
+async function getCatalogPosts(): Promise<Post[]> {
    try {
-      const req = await got('https://a.4cdn.org/cm/catalog.json', {
+      // https://github.com/4chan/4chan-API/blob/master/pages/Catalog.md
+      const req = await got(`https://a.4cdn.org/${chanBoard}/catalog.json`, {
          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36)',
+            'User-Agent': userAgent,
          },
          json: true,
       });
-      return req.body;
+
+      const allLinks: Post[] = [];
+      if (typeof req.body === 'object' && Array.isArray(req.body)) {
+         for (const page of req.body) {
+            allLinks.push(page.threads);
+         }
+         return allLinks.flat();
+      }
+      return [];
    } catch (e) {
-      return logger.error('getCatalog::4chan', e);
+      logger.error('getCatalogPosts::4chan', e);
+      return [];
    }
 }
 
-async function getThread(thread: string): Promise<ThreadResponse | void> {
-   const lastModified = selectLastMod.get(thread).lastmodified;
+// Get's a single thread, honors 4chan's If-Modified-Since header
+async function getThread(thread: number): Promise<Post[] | []> {
+   const { lastmodified, totalposts } = selectThread.get(thread);
    const headers: OutgoingHttpHeaders = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36)',
+      'User-Agent': userAgent,
    };
-   if (lastModified) {
-      headers['If-Modified-Since'] = new Date(lastModified).toUTCString();
+
+   if (lastmodified) {
+      headers['If-Modified-Since'] = new Date(lastmodified).toUTCString();
    }
+
    try {
-      const req = await got(`https://a.4cdn.org/cm/thread/${thread}.json`, {
+      // https://github.com/4chan/4chan-API/blob/master/pages/Threads.md
+      const req = await got(`https://a.4cdn.org/${chanBoard}/thread/${thread}.json`, {
          headers,
          json: true,
       });
+
       if (req.statusCode === 200) {
-         const lastModms = new Date(req.headers['last-modified'] as string).getTime().toString();
-         updateLastMod.run(lastModms, thread);
+         const lastModms = new Date(req.headers['last-modified'] as string).getTime();
+         updateThread.run(lastModms, req.body.posts.length, thread);
       } else if (req.statusCode === 304) {
          // if the api returns 304, then the thread has not been modified since last request
-         return undefined;
+         return [];
       }
-      return req.body;
+
+      // if totalposts = 0, return all .posts, if not, return all the posts after # totalposts
+      return (totalposts === 0 ? req.body.posts : req.body.posts.slice(totalposts, req.body.posts.length));
    } catch (e) {
-      return logger.error('getThread::4chan', e);
+      // return an empty array on error
+      logger.error('getThread::4chan', e);
+      return [];
    }
 }
 
-async function checkArchive(threads: string[]): Promise<ArchivedThreads> {
+// in: threads: number[] of threads NOT returned by the API, but are saved locally
+// out: deletedThreads: threadID's that 4chan didn't return at all (and are locally saved)
+// out: archivedThreads: threadID's that 4chan marked archived (and are locally saved)
+async function checkArchive(threads: number[]): Promise<ArchivedThreads> {
+   let deletedThreads: number[] = [];
+   let archivedThreads: number[] = [];
+
    try {
-      const req = await got('https://a.4cdn.org/cm/archive.json', {
+      // https://github.com/4chan/4chan-API/blob/master/pages/Archive.md
+      const req = await got(`https://a.4cdn.org/${chanBoard}/archive.json`, {
          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36)',
+            'User-Agent': userAgent,
          },
          json: true,
       });
-      const archived: string[] = req.body.map((x: number) => x.toString());
-      return {
-         deletedThreads: threads.filter(x => !archived.includes(x)),
-         archivedThreads: threads.filter(x => archived.includes(x)),
-      };
+
+      if (typeof req.body === 'object' && Array.isArray(req.body)) {
+         deletedThreads = threads.filter(x => !req.body.includes(x));
+         archivedThreads = threads.filter(x => req.body.includes(x));
+      }
    } catch (e) {
       logger.error('checkArchive::4chan', e);
-      return {
-         deletedThreads: [],
-         archivedThreads: [],
-      };
    }
+   return {
+      deletedThreads,
+      archivedThreads,
+   };
 }
 
-function checkThread(singleThread: Post): boolean {
-   const thread = singleThread;
-   const regex = /cat\s?boy/i;
+// check if a post passes the regex
+function checkThread(post: Post): boolean {
+   const thread = post;
    if (!thread.sub) thread.sub = '';
    if (!thread.com) thread.com = '';
    return !!(thread.sub.match(regex) || thread.com.match(regex));
 }
 
+// scrapes 4chan and updates chancats
 export async function updateChan(): Promise<void> {
-   const catalog = await getCatalog() as CatalogPage[];
-   let goodThreads: string[] = [];
-   let imgLinks: ChanImage[] = [];
+   const allCatalogPosts = await getCatalogPosts();
+   const goodThreads: number[] = [];
 
-   // do something for each page
-   for (const page of catalog) {
-      // filter each thread using the checkThread function passed to .filter
-      if (page.threads) {
-         goodThreads = goodThreads.concat(page.threads.filter(checkThread)
-            .map((p: Post): string => p.no.toString()));
-      }
+   for (const thread of allCatalogPosts.filter(checkThread)) {
+      goodThreads.push(thread.no);
    }
 
-   const savedThreads: string[] = selAliveThreads.all().reduce((acc, key) => acc.concat(key.no.toString()), []);
+   // Load all threads marked 'alive' or 'archived'
+   // transform threads into number[] of postno's
+   const savedNotDeadThreads: number[] = selAliveThreads.all()
+      .reduce((acc: number[], key: StoredThread) => {
+         acc.push(key.postno);
+         return acc;
+      }, []);
 
-   // if thread in db, but not in goodThreads, check if archived
+   // if the thread in the db, but not in the catalog json, check if archived
    // if archived, set status to archived, if not archived, thread is dead
-   const deadThreads = savedThreads.filter(x => !goodThreads.includes(x));
+   const deadThreads = savedNotDeadThreads.filter(x => !goodThreads.includes(x));
    if (deadThreads.length) {
       const { deletedThreads, archivedThreads } = await checkArchive(deadThreads);
-      for (const deadThread of deletedThreads) {
-         updateStatus.run('dead', deadThread);
-      }
       for (const archivedThread of archivedThreads) {
          updateStatus.run('archived', archivedThread);
+      }
+      for (const deadThread of deletedThreads) {
+         // this line replaces our sqlite trigger
+         delCatsFromDeadThreads.run({ postno: deadThread });
+         updateStatus.run('dead', deadThread);
       }
    }
 
    // if thread returned by api, not in db, add it
-   const newThreads = goodThreads.filter(x => !savedThreads.includes(x));
+   const newThreads = goodThreads.filter(x => !savedNotDeadThreads.includes(x));
    for (const newThread of newThreads) {
       insertThread.run(newThread);
    }
 
-   const allThreadInfo = (await Promise.all(goodThreads.map(thread => getThread(thread)))).filter(x => x !== undefined);
-   // return if no good threadInfo was returned, ie no thread has been modified
-   if (!allThreadInfo.length) {
-      return;
-   }
+   // make an array of promises of all thread info, transform post[][] -> post[] without 304 threads
+   const threadInfoPromises: Promise<Post[]>[] = goodThreads.map(x => getThread(x));
+   const allPosts = (await Promise.all(threadInfoPromises))
+      .flat()
+      .filter(x => x !== undefined);
 
-   // do something for every thread returned
-   for (const threadInfo of allThreadInfo) {
-      // filter all posts where filename exists and ext !== webm, push object to array
-      imgLinks = imgLinks.concat((threadInfo as ThreadResponse).posts
-         .filter((p: Post) => p.filename && p.ext !== '.webm')
-         .map((p: Post) => {
-            const ip = p as ImagePost;
-            if (ip.resto === 0) {
-               ip.resto = ip.no;
-            }
-            return {
-               no: ip.tim,
-               ext: ip.ext,
-               height: ip.h,
-               width: ip.w,
-               filesize: ip.fsize,
-               md5: ip.md5,
-               op: ip.resto,
-            };
-         }));
+   // iterate over all returned posts, and only return posts that contain images, cast as ImagePost
+   const imgLinks = allPosts.filter((p: Post) => p.filename && p.ext !== '.webm') as ImagePost[];
+
+   if (!imgLinks.length) {
+      return;
    }
 
    try {

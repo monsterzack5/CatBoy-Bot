@@ -2,42 +2,37 @@ import { Message } from 'discord.js';
 
 // as of @types/got@^9.6.5, got fininally got correct typings!
 
-export interface ChanImage {
-   ext: string;
-   no: number;
-}
-
 export interface Post {
-   tim?: number;
-   ext?: string;
    no: number;
    sub: string;
    com: string;
-   filename: string;
+   tim: number;
+   resto: number;
+   filename?: string;
+   ext?: string;
+   w?: number;
+   h?: number;
+   md5?: string;
+   fsize?: number;
 }
 
-export interface ImagePost {
-   no: number;
-   sub: string;
-   com: string;
+export interface ImagePost extends Post {
    filename: string;
    ext: string;
    w: number;
    h: number;
-   tim: number;
    md5: string;
    fsize: number;
-   resto: number;
 }
 
-export interface CatalogPage {
-   threads: ImagePost[];
+export interface CatalogPosts {
    page: number;
+   threads: Post[];
 }
 
-export interface ThreadResponse extends Post {
-   posts: Post[];
-}
+// export interface ThreadPosts {
+//    posts: Post[];
+// }
 
 export interface StoredMessage {
    time: number;
@@ -140,6 +135,16 @@ export interface SortedList {
 }
 
 export interface ArchivedThreads {
-   deletedThreads: string[];
-   archivedThreads: string[];
+   deletedThreads: number[];
+   archivedThreads: number[];
+}
+
+export interface FilteredImage {
+   id: string;
+   source: string;
+}
+
+export interface StoredThread {
+   postno: number;
+   status: 'alive' | 'dead' | 'archived';
 }

@@ -3,7 +3,7 @@ import { db } from '../utils/db';
 
 const searchBing = db.prepare('SELECT * FROM bingcats WHERE url = ?');
 const searchBooru = db.prepare('SELECT * FROM boorucats WHERE url = ?');
-const searchChan = db.prepare('SELECT * FROM chancats WHERE no = ?');
+const searchChan = db.prepare('SELECT * FROM chancats WHERE postno = ?');
 
 export default async (message: Message, args: string[]): Promise<void> => {
    // if (message.author.id !== process.env.botOwner) {

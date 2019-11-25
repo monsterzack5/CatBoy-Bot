@@ -43,7 +43,8 @@ CREATE TABLE IF NOT EXISTS filters (
 ) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS chancats (
-   no INTEGER PRIMARY KEY,
+   posttime INTEGER PRIMARY KEY,
+   postno INTEGER NOT NULL,
    ext TEXT NOT NULL,
    height INTEGER NOT NULL,
    width INTEGER NOT NULL,
@@ -53,9 +54,10 @@ CREATE TABLE IF NOT EXISTS chancats (
 ) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS threads (
-   no INTEGER PRIMARY KEY,
-   status TEXT NOT NULL,
-   lastmodified INTEGER
+   postno INTEGER PRIMARY KEY,
+   status TEXT NOT NULL DEFAULT 'alive',
+   lastmodified INTEGER,
+   totalposts INTEGER DEFAULT 0
 ) WITHOUT ROWID;
 
 CREATE TABLE IF NOT EXISTS userstats (
@@ -73,9 +75,3 @@ CREATE TABLE IF NOT EXISTS botactions (
 CREATE TABLE IF NOT EXISTS admins (
    uid TEXT PRIMARY KEY
 ) WITHOUT ROWID;
-
-CREATE TRIGGER IF NOT EXISTS remove_dead_links 
-   AFTER UPDATE OF status ON threads WHEN NEW.status = 'dead'
-BEGIN
-   DELETE FROM chancats WHERE op = OLD.no;
-END;
