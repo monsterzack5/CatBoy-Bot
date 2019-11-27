@@ -5,13 +5,20 @@ import { exportFile } from './fileLoader';
 import { downloadFile } from './downloadFile';
 
 const insertStoredImage = db.prepare('INSERT INTO storedcats (md5, url, originalurl) VALUES (?, ?, ?)');
+
 const selStoredImageMd5 = db.prepare('SELECT url FROM storedcats WHERE md5 = ?');
+const selUrlFromOGUrl = db.prepare('SELECT url FROM storedcats WHERE originalurl = ?');
 
 // this function takes a given image url, uploads that image to a discord channel
 // then updates our db with that new image url
 export async function makeImagePermalink(url: string): Promise<string | undefined> {
+   // check if the given url already has a permalink
+   const alreadyStored = selUrlFromOGUrl.get(url);
+   if (alreadyStored) {
+      return alreadyStored.url;
+   }
+
    // this could be done more eloquently using the `Content-Type` header
-   // todo: check db for md5
    const fileExtention = url.match(/\.\w{3,4}($|\?)/);
    if (!fileExtention) {
       throw new Error(`Error! Cannot infer file extention from url: ${url}`);
