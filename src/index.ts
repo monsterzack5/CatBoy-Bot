@@ -62,7 +62,7 @@ bot.on('ready', async (): Promise<void> => {
    // handler for botActions
    ({ handleBotActions, getBotActions } = await import('./utils/botActions'));
    // handlers for reactions
-   ({ handleFavorite, handleFilter, handleReport } = await import('./utils/react'));
+   ({ handleFavorite, handleFilter, handleReport } = await import('./utils/handleReactions'));
    // antispam function
    ({ checkAntiSpam } = await import('./utils/antispam'));
    // starts our autoupdate timers
