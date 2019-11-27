@@ -1,6 +1,6 @@
 import { Message } from 'discord.js';
 
-// as of @types/got@^9.6.5, got fininally got correct typings!
+export type workerParams = [string, string, string?, boolean?];
 
 export interface Post {
    no: number;
@@ -29,10 +29,6 @@ export interface CatalogPosts {
    page: number;
    threads: Post[];
 }
-
-// export interface ThreadPosts {
-//    posts: Post[];
-// }
 
 export interface StoredMessage {
    time: number;

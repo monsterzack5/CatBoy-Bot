@@ -3,13 +3,18 @@ import { db } from './db';
 import { checkAdmin } from './checkAdmin';
 import { filterUrl } from './filter';
 import { logger } from './logger';
+import { makeImagePermalink } from './makeImagePermalink';
 
 const insertFavorite = db.prepare('INSERT OR REPLACE INTO favorites (uid, url) VALUES(?, ?)');
 const insertReport = db.prepare('INSERT INTO reports (url, num) VALUES (?, 1) ON CONFLICT(url) DO UPDATE SET num = num + 1');
 const selectFiltered = db.prepare('SELECT * FROM filtered WHERE id = ?');
 
-export function handleFavorite(userID: string, url: string): void {
+export async function handleFavorite(userID: string, url: string): Promise<void> {
+   // up date the db first, so !mycatboy works right away
+   // then update the db with a permalink
    insertFavorite.run(userID, url);
+   const permaUrl = await makeImagePermalink(url);
+   insertFavorite.run(userID, permaUrl);
 }
 
 export async function handleFilter(url: string, postToFilter: Message, userID: string): Promise<void> {

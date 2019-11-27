@@ -9,7 +9,9 @@ export function checkRequired(): boolean {
       && process.env.dbFileDev
       && process.env.bingToken
       && process.env.loggingChannel
-      && process.env.errorsChannel) {
+      && process.env.errorsChannel
+      && process.env.archiveChannel
+      && process.env.storageChannel) {
       return true;
    }
    return false;
