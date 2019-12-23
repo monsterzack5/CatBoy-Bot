@@ -10,6 +10,10 @@ class Logger {
    public constructor() {
       this.errorChannel = bot.channels.get(process.env.errorsChannel as string) as TextChannel;
       this.logChannel = bot.channels.get(process.env.loggingChannel as string) as TextChannel;
+      if (!this.errorChannel || !this.logChannel) {
+         console.error('FATAL ERROR! Logger failed to get logChannel | errorChannel');
+         process.exit(1);
+      }
    }
 
    private timeStamp(): string {
