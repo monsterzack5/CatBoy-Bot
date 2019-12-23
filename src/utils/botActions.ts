@@ -1,12 +1,12 @@
 import { Message } from 'discord.js';
 import randomColor from 'randomcolor';
-import { SortedList, Command } from '../typings/interfaces';
+import { SortedList, Commands } from '../typings/interfaces';
 import { db } from './db';
 
 const selectRandomAction = db.prepare('SELECT url FROM botactions WHERE action = ? LIMIT 1 OFFSET ?');
 const selectAllActions = db.prepare('SELECT action FROM botactions');
 
-export function getBotActions(oldCommands?: Map<string, number | Command>): Map<string, number | Command> {
+export function getBotActions(oldCommands?: Commands): Commands {
    const allActions = selectAllActions.all().reduce((acc, key) => acc.concat(key.action), []);
    const sortedActions = allActions.reduce((prev: SortedList, cur: string) => {
       prev[cur] = (prev[cur] || 0) + 1; // eslint-disable-line no-param-reassign

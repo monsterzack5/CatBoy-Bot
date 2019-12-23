@@ -1,31 +1,35 @@
-import { readdirSync } from 'fs';
 import randomColor from 'randomcolor';
+import { readdirSync } from 'fs';
 import { getBotActions } from './botActions';
 import {
-   LookUpTable, Command, DiscordEmbedReply,
+   LookUpTable, Command, DiscordEmbedReply, Commands,
 } from '../typings/interfaces';
 
-// var to cache all the command files
-let cmdFiles: Command[];
-const botActions = getBotActions();
+// namespace cache
+let cmdFiles: Command[] = [];
+let botActions: Commands;
 
-// loads all the cmdFiles at boot, and caches them
-async function loadFiles(): Promise<void> {
+// runs first
+export async function loadCommandFiles(): Promise<void> {
+   // loads all the cmdFiles, and caches them
    const filepromises: Promise<Command>[] = [];
    const files = readdirSync('./dist/commands')
       .filter(f => f.endsWith('.js'));
    for (const file of files) {
       filepromises.push(import(`../commands/${file}`));
    }
+
    cmdFiles = await Promise.all(filepromises);
+   botActions = getBotActions();
 }
 
 // creates the map that holds our commands
-export async function createCommandsMap(): Promise<Map<string, Command>> {
-   // since we ALWAYS run this function first, we can treat it as an init function
-   await loadFiles();
+export function createCommandsMap(): Commands {
+   if (!cmdFiles) {
+      console.error(new Error('Error! Failed to create commands map, did you load the files first?'));
+      process.exit(1);
+   }
    const botCommands = new Map();
-
    try {
       for (const command of cmdFiles) {
          botCommands.set(command.help.name, command.default);
@@ -68,13 +72,13 @@ export function createHelpEmbed(): DiscordEmbedReply {
 
 // creates a lookup table for antispam
 export function createTimeOutTable(): LookUpTable {
-   const defaultTimeLimit = 1000;
-   const lookUpTable: LookUpTable = {};
-
    if (!cmdFiles) {
-      console.error(new Error('Error! Failed to create antispam lookup table, did you load the files first?'));
+      console.error(new Error('Error! Failed to create LookUpTable, did you load the files first?'));
       process.exit(1);
    }
+
+   const defaultTimeLimit = 1000;
+   const lookUpTable: LookUpTable = {};
    for (const command of cmdFiles) {
       if (!command.help.timeout) command.help.timeout = defaultTimeLimit;
       lookUpTable[command.help.name] = command.help.timeout as number;
