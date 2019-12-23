@@ -9,7 +9,8 @@ const selectAllActions = db.prepare('SELECT action FROM botactions');
 export function getBotActions(oldCommands?: Commands): Commands {
    const allActions = selectAllActions.all().reduce((acc, key) => acc.concat(key.action), []);
    const sortedActions = allActions.reduce((prev: SortedList, cur: string) => {
-      prev[cur] = (prev[cur] || 0) + 1; // eslint-disable-line no-param-reassign
+      const key = prev;
+      key[cur] = (key[cur] || 0) + 1;
       return prev;
    }, {});
    const actionsMap: Map<string, number> = new Map(Object.entries(sortedActions));
