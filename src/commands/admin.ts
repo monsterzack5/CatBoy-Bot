@@ -5,9 +5,9 @@ import { updateBing } from '../utils/bing';
 import { checkHealth } from '../utils/dbhealthcheck';
 import { updateBooru } from '../utils/booru';
 import { db } from '../utils/db';
-import { reloadActions } from '../index';
 import { checkAdmin } from '../utils/checkAdmin';
 import { logger } from '../utils/logger';
+import { bot } from '../utils/bot';
 
 // SQlite calls for botActions
 const listActions = db.prepare('SELECT DISTINCT action from botactions');
@@ -80,7 +80,7 @@ export default (message: Message, args: string[]): void => {
                return;
             }
             insertAction.run(args[2], args[1].toLowerCase());
-            reloadActions();
+            bot.emit('updateBotActions');
             message.channel.send(`Added action: \`${args[1]}\` with url: \`${args[2]}\``);
             logger.log(`addaction::admin: action: ${args[1]} added with url \`${args[2]}\``);
          } else {
