@@ -39,7 +39,7 @@ async function checUrl(url: string): Promise<void> {
       });
       // depending on your connection, the 5s response time can vary, but this bot
       // is meant for heroku, which has a aws connection, so 5s is generous
-      if (resp.statusCode !== 200 || (resp.timings.end - resp.timings.start) > 5000) {
+      if (resp.statusCode !== 200 || ((resp.timings.end || 0) - resp.timings.start) > 5000) {
          filterUrl(url);
          return;
       }

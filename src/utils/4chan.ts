@@ -1,10 +1,9 @@
 import got from 'got';
-import { OutgoingHttpHeaders } from 'http';
 import { db } from './db';
 import { updateRatios } from '../commands/catboy';
 import { logger } from './logger';
 import {
-   Post, ImagePost, ArchivedThreads, FilteredImage, StoredThread,
+   Post, ImagePost, ArchivedThreads, FilteredImage, StoredThread, ThreadPosts,
 } from '../typings/interfaces';
 
 // Constants
@@ -45,9 +44,9 @@ async function getCatalogPosts(): Promise<Post[]> {
       // https://github.com/4chan/4chan-API/blob/master/pages/Catalog.md
       const req = await got(`https://a.4cdn.org/${chanBoard}/catalog.json`, {
          headers: {
-            'User-Agent': userAgent,
+            Agent: userAgent,
          },
-         json: true,
+         responseType: 'json',
       });
 
       const allLinks: Post[] = [];
@@ -67,8 +66,8 @@ async function getCatalogPosts(): Promise<Post[]> {
 // Get's a single thread, honors 4chan's If-Modified-Since header
 async function getThread(thread: number): Promise<Post[] | []> {
    const { lastmodified, totalposts } = selectThread.get(thread);
-   const headers: OutgoingHttpHeaders = {
-      'User-Agent': userAgent,
+   const headers: Record<string, string> = {
+      Agent: userAgent,
    };
 
    if (lastmodified) {
@@ -79,19 +78,20 @@ async function getThread(thread: number): Promise<Post[] | []> {
       // https://github.com/4chan/4chan-API/blob/master/pages/Threads.md
       const req = await got(`https://a.4cdn.org/${chanBoard}/thread/${thread}.json`, {
          headers,
-         json: true,
+         responseType: 'json',
       });
-
+      const body = req.body as ThreadPosts;
       if (req.statusCode === 200) {
          const lastModms = new Date(req.headers['last-modified'] as string).getTime();
-         updateThread.run(lastModms, req.body.posts.length, thread);
+         console.log();
+         updateThread.run(lastModms, body.posts.length, thread);
       } else if (req.statusCode === 304) {
          // if the api returns 304, then the thread has not been modified since last request
          return [];
       }
 
       // if totalposts = 0, return all .posts, if not, return all the posts after # totalposts
-      return (totalposts === 0 ? req.body.posts : req.body.posts.slice(totalposts, req.body.posts.length));
+      return (totalposts === 0 ? body.posts : body.posts.slice(totalposts, body.posts.length));
    } catch (e) {
       // return an empty array on error
       logger.error('getThread::4chan', e);
@@ -110,14 +110,14 @@ async function checkArchive(threads: number[]): Promise<ArchivedThreads> {
       // https://github.com/4chan/4chan-API/blob/master/pages/Archive.md
       const req = await got(`https://a.4cdn.org/${chanBoard}/archive.json`, {
          headers: {
-            'User-Agent': userAgent,
+            Agent: userAgent,
          },
-         json: true,
+         responseType: 'json',
       });
-
+      const body = req.body as number[];
       if (typeof req.body === 'object' && Array.isArray(req.body)) {
-         deletedThreads = threads.filter(x => !req.body.includes(x));
-         archivedThreads = threads.filter(x => req.body.includes(x));
+         deletedThreads = threads.filter(x => !body.includes(x));
+         archivedThreads = threads.filter(x => body.includes(x));
       }
    } catch (e) {
       logger.error('checkArchive::4chan', e);

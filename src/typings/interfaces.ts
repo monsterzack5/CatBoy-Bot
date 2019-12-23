@@ -2,6 +2,8 @@ import { Message } from 'discord.js';
 
 export type workerParams = [string, string, string?, boolean?];
 
+export type Commands = Map<string, number | Command>;
+
 export interface Post {
    no: number;
    sub: string;
@@ -28,6 +30,10 @@ export interface ImagePost extends Post {
 export interface CatalogPosts {
    page: number;
    threads: Post[];
+}
+
+export interface ThreadPosts {
+   posts: Post[];
 }
 
 export interface StoredMessage {

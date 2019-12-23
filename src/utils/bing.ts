@@ -36,12 +36,12 @@ async function getJSON(url: string): Promise<ReturnedBingJSON | void> {
    try {
       const req = await got(url, {
          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36)',
+            Agent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36)',
             'Ocp-Apim-Subscription-Key': process.env.bingToken,
-         },
-         json: true,
+         } as Record<string, string>,
+         responseType: 'json',
       });
-      return req.body;
+      return req.body as ReturnedBingJSON | void;
    } catch (e) {
       return logger.error('getJSON::bing', e);
    }
