@@ -2,6 +2,7 @@ import got from 'got';
 import { db } from './db';
 import { ReturnedBingJSON } from '../typings/interfaces';
 import { logger } from './logger';
+import { sleep } from './sleep';
 
 const insertBing = db.prepare('INSERT OR REPLACE INTO bingcats (id, url, height, width, dateposted, name, color) VALUES (?, ?, ?, ?, ?, ?, ?)');
 const deleteBing = db.prepare('DELETE FROM bingcats WHERE id = ?');
@@ -63,9 +64,6 @@ async function getJSON(url: string): Promise<ReturnedBingJSON | void> {
 
 // bing doesn't like their api spammed and will return 4XX errors
 // for more than 3 calls a second (on a free plan)
-async function sleep(timeMs: number): Promise<void> {
-   await setTimeout(() => { }, timeMs);
-}
 
 // recursive function to use Bing's API
 async function getImages(inputJSON: ReturnedBingJSON[] = [], offset = 0, termNum = 0,

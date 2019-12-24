@@ -4,6 +4,7 @@ import { checkAdmin } from './checkAdmin';
 import { filterUrl } from './filter';
 import { logger } from './logger';
 import { makeImagePermalink } from './makeImagePermalink';
+import { sleep } from './sleep';
 
 const insertFavorite = db.prepare('INSERT OR REPLACE INTO favorites (uid, url) VALUES(?, ?)');
 const insertReport = db.prepare('INSERT INTO reports (url, num) VALUES (?, 1) ON CONFLICT(url) DO UPDATE SET num = num + 1');
@@ -18,18 +19,21 @@ export async function handleFavorite(userID: string, url: string): Promise<void>
 }
 
 export async function handleFilter(url: string, postToFilter: Message, userID: string): Promise<void> {
-   if (!checkAdmin(userID)) {
-      postToFilter.react('❌');
-      return;
-   }
+   if (!checkAdmin(userID)) return;
+
    // react with F if something was filtered, interobang if not
+   // if filtered, delete catboy after 5 seconds
    const react = (filterUrl(url, true) ? '🇫' : '⁉');
    await postToFilter.react(react);
+   if (react === '🇫') {
+      await sleep(5000);
+      await postToFilter.delete();
+   }
 }
 
 async function reactThenRemoveIt(postToFilter: Message, reaction: string, time: number): Promise<void> {
    const react = await postToFilter.react(reaction);
-   await new Promise(resolve => setTimeout(resolve, time));
+   await sleep(time);
    react.remove();
 }
 
