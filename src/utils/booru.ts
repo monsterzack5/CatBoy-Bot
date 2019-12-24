@@ -4,18 +4,21 @@ import { db } from './db';
 import { logger } from './logger';
 
 const insertBooru = db.prepare('INSERT OR REPLACE INTO boorucats (url, source, height, width, score, tags) VALUES (?, ?, ?, ?, ?, ?)');
+const selectBooru = db.prepare('SELECT * FROM boorucats WHERE url = ?');
 const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'booru\'');
 const deleteBooru = db.prepare('DELETE FROM boorucats WHERE url = ?');
 
 const insertImagesRemoveFiltered = db.transaction((booruCats, badCats): void => {
    let totalAdded = 0;
    for (const cat of booruCats) {
-      const tagsString = cat.tags.join(' ');
       // sometimes cats also have a `cat.data.source` url, which isnt null
       // but if fileUrl is null, that url always leads to a 403
       if (cat.fileUrl) {
-         insertBooru.run(cat.fileUrl, cat.source, cat.height, cat.width, cat.score, tagsString);
-         totalAdded += 1;
+         const alreadyInDb = selectBooru.get(cat.fileUrl);
+         if (!alreadyInDb) {
+            insertBooru.run(cat.fileUrl, cat.source, cat.height, cat.width, cat.score, cat.tags.join(' '));
+            totalAdded += 1;
+         }
       }
    }
    for (const badCat of badCats) {
