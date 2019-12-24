@@ -27,7 +27,7 @@ let booruCount: number;
 
 // this function create's a discord embed, from an image url and an optional source url
 function embedBuilder(url: string, source?: string): DiscordEmbedImageReply {
-   const color = parseInt((randomColor() as string).substring(1), 16);
+   const color = parseInt((randomColor()).substring(1), 16);
    const description = !source ? '' : `[Source](${source})`;
    return {
       embed: {

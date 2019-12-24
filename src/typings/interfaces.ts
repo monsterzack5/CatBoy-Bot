@@ -1,8 +1,42 @@
 import { Message } from 'discord.js';
 
+declare global {
+   // in required.ts, we check for these env vars, so strong typing them is Ok!u
+   // eslint-disable-next-line @typescript-eslint/no-namespace
+   namespace NodeJS {
+      interface ProcessEnv {
+         prefix: string;
+         NODE_ENV: 'dev' | 'production';
+         discordTokenDev: string;
+         botOwner: string;
+         dbChannel: string;
+         configFile: string;
+         configFileDev: string;
+         dbFile: string;
+         dbFileDev: string;
+         bingToken: string;
+         loggingChannel: string;
+         errorsChannel: string;
+         archiveChannel: string;
+         storageChannel: string;
+      }
+   }
+}
+
 export type workerParams = [string, string, string?, boolean?];
 
-export type Commands = Map<string, number | Command>;
+export type Commands = Map<string, Command['default']>;
+
+export type BotActions = Map<string, number>;
+
+export interface Command {
+   default(message?: Message, args?: string[]): void;
+   help: {
+      name: string;
+      help?: string;
+      timeout?: number;
+   };
+}
 
 export interface Post {
    no: number;
@@ -40,16 +74,6 @@ export interface StoredMessage {
    time: number;
    auth: string;
    cmd: string;
-}
-
-export interface Command {
-   (message: Message, args: string[]): void;
-   default(message: Message, args: string[]): void;
-   help: {
-      name: string;
-      help?: string;
-      timeout?: number;
-   };
 }
 
 export interface LookUpTable {

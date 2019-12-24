@@ -21,7 +21,7 @@ export async function importFile(fileName: string): Promise<boolean> {
    if (getPath(fileName)) {
       throw new Error('Imported files should not contain filepaths.');
    }
-   const channel = bot.channels.get(process.env.dbChannel as string) as TextChannel;
+   const channel = bot.channels.get(process.env.dbChannel) as TextChannel;
    if (!channel) {
       throw new Error(`Unable to read channel: ${process.env.dbChannel}, Bad Permissions or incorrect env vars`);
    }
@@ -36,11 +36,8 @@ export async function importFile(fileName: string): Promise<boolean> {
 }
 
 export async function exportFile(
-   fName: string,
-   doArchive?: boolean,
-   channelId = process.env.dbChannel,
-   deleteOld = true,
-): Promise<string | undefined> {
+   fName: string, doArchive?: boolean, channelId = process.env.dbChannel, deleteOld = true,
+): Promise<string> {
    // if the fileName contains a path, we remove the path and just get the fileName
    if (!channelId) {
       throw new Error('Error! channelId set incorrectly!');
@@ -54,7 +51,7 @@ export async function exportFile(
 
    // if we are told to archive the file, we upload it without deleting the old version
    if (doArchive) {
-      const archive = bot.channels.get(process.env.archiveChannel as string) as TextChannel;
+      const archive = bot.channels.get(process.env.archiveChannel) as TextChannel;
       if (archive) {
          await archive.send({ files: [fName] });
       }

@@ -15,7 +15,7 @@ export default async (message: Message): Promise<void> => {
    }
    const catboy = search.get(id);
    if (catboy) {
-      const color = parseInt((randomColor() as string).substring(1), 16);
+      const color = parseInt((randomColor()).substring(1), 16);
       message.channel.send({
          embed: {
             color,

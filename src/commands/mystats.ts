@@ -16,7 +16,7 @@ export default async (message: Message): Promise<void> => {
 
    const stats = selectStats.get(id);
    if (stats) {
-      const color = parseInt((randomColor() as string).substring(1), 16);
+      const color = parseInt((randomColor()).substring(1), 16);
       const total = Object.values(selectSum.get() as Total).reduce((acc, val) => (acc + val), 0);
       const userTotal = stats.bing + stats.booru + stats.chan;
       message.channel.send({
