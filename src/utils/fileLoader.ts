@@ -60,21 +60,23 @@ export async function exportFile(
       }
    }
 
-   // upload the file first, just in case
-   const uploadedUrl = (await channel.send({ files: [fName] }) as Message).attachments.first().url;
+   // upload the file first, just in case, then save uploaded url and id
+   const uploadedFile = await channel.send({ files: [fName] }) as Message;
+   const { url } = uploadedFile.attachments.first();
+   const { id } = uploadedFile;
 
-   // if told to delete the old version, search for the fileaName, then delete it
+   // if told to delete the old version, search for the fileaName, then delete ALL old versions
    if (deleteOld) {
       const msgs = await channel.fetchMessages();
-      const file = msgs.find(m => !!(m.attachments.size
-         && m.attachments.first().filename === fileName));
-      if (!file) {
+      const files = msgs.filter(m => !!(m.attachments.size
+         && m.attachments.first().filename === fileName
+         && m.id !== id));
+      if (!files.size) {
          throw new Error(`file: ${fileName} not found`);
       }
-      // if found, delete the old file
-      const oldMsg = await channel.fetchMessage(file.id);
-      await oldMsg.delete();
+      /* I did this as a oneliner because I hate readability :^) */
+      // waits for all the messages returned in `files` to be deleted
+      await Promise.all((await Promise.all(files.map(msg => channel.fetchMessage(msg.id)))).map(msg => msg.delete()));
    }
-
-   return uploadedUrl;
+   return url;
 }

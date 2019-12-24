@@ -1,12 +1,14 @@
 import http from 'http';
 import { schedule, ScheduledTask } from 'node-cron';
 import { existsSync, mkdirSync } from 'fs';
+import { Socket } from 'net';
 import { exportFile } from './fileLoader';
 import { db, memDb } from './db';
 import { updateChan } from './4chan';
 import { checkHealth } from './dbhealthcheck';
 import { bot } from './bot';
 
+const openSockets: Set<Socket> = new Set();
 const port = process.env.PORT || 5010;
 let httpServer: http.Server;
 let herokuPing: NodeJS.Timeout;
@@ -19,6 +21,13 @@ export function startTimers(): void {
    httpServer = http.createServer((_req, res): void => {
       res.end();
    }).listen(port);
+
+   httpServer.on('connection', (socket) => {
+      openSockets.add(socket);
+      socket.on('close', () => {
+         openSockets.delete(socket);
+      });
+   });
 
    if (process.env.NODE_ENV === 'production') {
       // ping our dyno every 15 minutes so heroku doesnt murder it
@@ -56,26 +65,27 @@ async function stopBot(doArchive?: boolean): Promise<void> {
    console.log('Goodbye!');
    db.close();
    memDb.close();
+   for (const socket of openSockets) {
+      socket.destroy();
+   }
    httpServer.close();
    dbBackup.destroy();
    dbHeathCheck.destroy();
    clearInterval(herokuPing);
    if (doArchive) {
-      await exportFile(`${process.env.dbFile}.db`, true);
+      await exportFile(`${process.env.dbFile}.db`, true, undefined, false);
    } else {
-      await exportFile(`${process.env.dbFile}.db`);
+      await exportFile(`${process.env.dbFile}.db`, false, undefined, true);
    }
    bot.destroy();
-   return Promise.resolve();
 }
 
+// We exit node gracefully, so we don't need to explicitly call process.exit()
 process.on('SIGINT', async (): Promise<void> => {
    await stopBot();
-   process.exit(0);
 });
 
 // only archive the database on sigterm
 process.on('SIGTERM', async (): Promise<void> => {
    await stopBot(true);
-   process.exit(0);
 });
