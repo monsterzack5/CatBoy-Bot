@@ -4,17 +4,31 @@ import { ReturnedBingJSON } from '../typings/interfaces';
 import { logger } from './logger';
 
 const insertBing = db.prepare('INSERT OR REPLACE INTO bingcats (id, url, height, width, dateposted, name, color) VALUES (?, ?, ?, ?, ?, ?, ?)');
-const searchFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'bing\'');
 const deleteBing = db.prepare('DELETE FROM bingcats WHERE id = ?');
+
+const selectBing = db.prepare('SELECT * FROM bingcats WHERE id = ?');
+const selectFiltered = db.prepare('SELECT * FROM filtered WHERE source = \'bing\'');
 const selectAllFilters = db.prepare('SELECT regex FROM filters');
 
 const insertImagesRemoveFiltered = db.transaction((images: ReturnedBingJSON[], badImages): void => {
-   for (const image of images) {
-      insertBing
-         .run(image.imageId, image.contentUrl, image.height, image.width, image.datePublished, image.name, image.accentColor);
+   let totalAdded = 0;
+   for (const {
+      imageId, contentUrl, height, width, datePublished, name, accentColor,
+   } of images) {
+      const alreadyInDb = selectBing.get(imageId);
+      if (!alreadyInDb) {
+         insertBing.run(imageId, contentUrl, height, width, datePublished, name, accentColor);
+         totalAdded += 1;
+      }
    }
    for (const badImage of badImages) {
-      deleteBing.run(badImage.id);
+      const didDelete = deleteBing.run(badImage.id);
+      if (didDelete.changes > 0) {
+         totalAdded -= 1;
+      }
+   }
+   if (totalAdded > 0) {
+      logger.log(`Pulled in ${totalAdded} images from bing into our db.`);
    }
 });
 
@@ -41,7 +55,7 @@ async function getJSON(url: string): Promise<ReturnedBingJSON | void> {
          } as Record<string, string>,
          responseType: 'json',
       });
-      return req.body as ReturnedBingJSON | void;
+      return req.body as ReturnedBingJSON;
    } catch (e) {
       return logger.error('getJSON::bing', e);
    }
@@ -56,7 +70,6 @@ async function sleep(timeMs: number): Promise<void> {
 // recursive function to use Bing's API
 async function getImages(inputJSON: ReturnedBingJSON[] = [], offset = 0, termNum = 0,
    totalItems = searchTerms[0].limit): Promise<ReturnedBingJSON[]> {
-   // what's the point of eslint(no-param-reassign) ????
    let json = inputJSON;
    let term = termNum;
    let total = totalItems;
@@ -66,7 +79,6 @@ async function getImages(inputJSON: ReturnedBingJSON[] = [], offset = 0, termNum
    const url = `https://api.cognitive.microsoft.com/bing/v7.0/images/search?q=${searchTerms[term].q}&count=${count}&offset=${offset}&mkt=en-us&safeSearch=Moderate`;
    const newJSON = await getJSON(url) as ReturnedBingJSON;
    await sleep(750);
-   // add the new responces to `json`
    json = json.concat(newJSON.value);
 
    // call this function recursively till we get the limit specified
@@ -83,7 +95,6 @@ async function getImages(inputJSON: ReturnedBingJSON[] = [], offset = 0, termNum
    if (term < searchTerms.length && searchTerms[term + 1]) {
       term += 1;
       total += searchTerms[term].limit;
-      // we set the offset back to 0 when switching to the next term.
       return getImages(json, 0, term, total);
    }
    return json;
@@ -103,16 +114,14 @@ function removeFiltered(json: ReturnedBingJSON[]): ReturnedBingJSON[] {
 }
 
 export async function updateBing(): Promise<void> {
-   // wait until we get all the images we requested
    const data = await getImages();
    // remove websites we blocked with the `filters` table in the db
    const dataFiltered = removeFiltered(data);
 
    try {
-      const badImages = searchFiltered.all();
+      const badImages = selectFiltered.all();
       insertImagesRemoveFiltered(dataFiltered, badImages);
    } catch (e) {
       console.error(`Error! Failed to update the bing cats!\n${e}`);
    }
-   return Promise.resolve();
 }
