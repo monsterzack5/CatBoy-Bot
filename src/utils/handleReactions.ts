@@ -23,7 +23,7 @@ export async function handleFilter(url: string, postToFilter: Message, userID: s
       return;
    }
    // react with F if something was filtered, interobang if not
-   const react = (filterUrl(url) ? '🇫' : '⁉');
+   const react = (filterUrl(url, true) ? '🇫' : '⁉');
    await postToFilter.react(react);
 }
 

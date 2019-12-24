@@ -55,7 +55,7 @@ export default async (message: Message, args: string[]): Promise<void> => {
       message.channel.send(`Currently active filters:${reply}`);
       return;
    }
-   if (filterUrl(args[0])) {
+   if (filterUrl(args[0], true)) {
       message.channel.send('Url filtered from db!');
    } else message.channel.send('Error! Url not found in the db!');
 };

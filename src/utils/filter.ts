@@ -17,8 +17,7 @@ const insertBadUrl = db.prepare('INSERT OR REPLACE INTO badurls (url, source) VA
 // FIXME: the fallthrough case of a url being bing+booru will
 // result in an sql unique error
 
-// FIXME: check if url is in favs table, fix if so
-function filterChan(url: string): boolean {
+function filterChan(url: string, manuallyDeleted: boolean): boolean {
    if (url.startsWith('https://i.4cdn.org')) {
       const postNumber = url.substring(22, 35);
       const isAlreadyFiltered = selectFiltered.get(postNumber);
@@ -27,8 +26,13 @@ function filterChan(url: string): boolean {
          const wasDeleted = deleteChan.run(url);
          return wasDeleted.changes > 0;
       }
-      insertFilter.run(postNumber, 'chan');
-      insertBadUrl.run(postNumber, 'chan');
+      // if the URL was manually deleted, delete using filter, if not, insert into badurls table
+      // which will be checked periodically
+      if (manuallyDeleted) {
+         insertFilter.run(postNumber, 'chan');
+      } else {
+         insertBadUrl.run(url, 'chan');
+      }
       deleteChan.run(postNumber);
       deleteReport.run(url);
       logger.log(`Filtered catboy from chan table with url: \`${url}\``);
@@ -37,7 +41,7 @@ function filterChan(url: string): boolean {
    return false;
 }
 
-function filterBing(url: string): boolean {
+function filterBing(url: string, manuallyDeleted: boolean): boolean {
    const isBing = selectBing.get(url);
    if (isBing) {
       const isAlreadyFiltered = selectFiltered.get(url);
@@ -46,8 +50,7 @@ function filterBing(url: string): boolean {
          const wasDeleted = deleteBing.run(url);
          return wasDeleted.changes > 0;
       }
-      insertFilter.run(url, 'bing');
-      insertBadUrl.run(url, 'bing');
+      ((manuallyDeleted) ? insertFilter : insertBadUrl).run(url, 'bing');
       deleteBing.run(url);
       deleteReport.run(url);
       logger.log(`Filtered catboy from bing table with url: \`${url}\``);
@@ -56,7 +59,7 @@ function filterBing(url: string): boolean {
    return false;
 }
 
-function filterBooru(url: string): boolean {
+function filterBooru(url: string, manuallyDeleted: boolean): boolean {
    const isBooru = selectBooru.get(url);
    if (isBooru) {
       const isAlreadyFiltered = selectFiltered.get(url);
@@ -65,8 +68,7 @@ function filterBooru(url: string): boolean {
          const wasDeleted = deleteBooru.run(url);
          return wasDeleted.changes > 0;
       }
-      insertFilter.run(url, 'booru');
-      insertFilter.run(url, 'booru');
+      ((manuallyDeleted) ? insertFilter : insertBadUrl).run(url, 'booru');
       deleteBooru.run(url);
       deleteReport.run(url);
       logger.log(`Filtered catboy from booru table with url: \`${url}\``);
@@ -76,9 +78,9 @@ function filterBooru(url: string): boolean {
 }
 
 
-export function filterUrl(url: string): boolean {
-   const didChanFilter = filterChan(url);
-   const didBingFilter = filterBing(url);
-   const didBooruFilter = filterBooru(url);
+export function filterUrl(url: string, manuallyDeleted = false): boolean {
+   const didChanFilter = filterChan(url, manuallyDeleted);
+   const didBingFilter = filterBing(url, manuallyDeleted);
+   const didBooruFilter = filterBooru(url, manuallyDeleted);
    return (didChanFilter || didBingFilter || didBooruFilter);
 }
