@@ -4,9 +4,9 @@ import { logger } from './logger';
 const insertFilter = db.prepare('INSERT INTO filtered (id, source) VALUES (?, ?)');
 
 const deleteChan = db.prepare('DELETE FROM chancats WHERE postno = ?');
-const deleteBing = db.prepare('DELETE FROM bingcats WHERE id = ?');
-const deleteReport = db.prepare('DELETE FROM reports WHERE url = ?');
+const deleteBing = db.prepare('DELETE FROM bingcats WHERE url = ?');
 const deleteBooru = db.prepare('DELETE FROM boorucats WHERE url = ?');
+const deleteReport = db.prepare('DELETE FROM reports WHERE url = ?');
 
 const selectBing = db.prepare('SELECT * FROM bingcats WHERE url = ?');
 const selectFiltered = db.prepare('SELECT * FROM filtered WHERE id = ?');

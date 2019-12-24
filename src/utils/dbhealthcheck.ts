@@ -4,7 +4,7 @@ import { db } from './db';
 import { filterUrl } from './filter';
 import { logger } from './logger';
 
-const selectAllBadUrls = db.prepare('SELECT * FROM badurls');
+// const selectAllBadUrls = db.prepare('SELECT * FROM badurls');
 
 const selectAllChan = db.prepare('SELECT * FROM chancats');
 const selectAllBing = db.prepare('SELECT * FROM bingcats');
@@ -13,8 +13,7 @@ const selectFiltered = db.prepare('SELECT * FROM filtered WHERE id = ?');
 
 // todo: a reason column seems like a good idea
 
-async function checkUrl(url: string, fromBadUrls = true): Promise<void> {
-   const permaDel = !fromBadUrls;
+async function checkUrl(url: string, permaDel = false): Promise<void> {
    try {
       // if the url is filtered, but we're checking it, that means
       // the url is in the db when it SHOULD BE FILTERED
@@ -69,25 +68,13 @@ export async function checkHealth(): Promise<void> {
       .map(url => url.url);
    const booruUrls = selectAllBooru.all()
       .map(url => url.url);
-   const allCatboyUrls = bingUrls.concat(chanUrls).concat(booruUrls);
-   // *************
+   const allCatboyUrls = bingUrls.concat(chanUrls, booruUrls);
+
    // This checks the health of all the live URLs in our database
    for (const url of allCatboyUrls) {
       queue.add(() => checkUrl(url));
    }
    await queue.onIdle();
-   // -- *************
-
-   // ************* TODO
-   // This checks the health of all the URLs in the `badurls` table
-   // as some of these URL's could have come back online since last checked
-   // const allBadUrls = selectAllBadUrls.all() as [string, 'chan' | 'bing' | 'booru'];
-   // for (const url of allBadUrls) {
-   //    // the `true` in checkUrl cascades down to filterUrl's manually delete
-   //    queue.add(() => checkUrl(url, true));
-   // }
-   // await queue.onIdle();
-   // -- ************* TODO
 
    db.exec('VACUUM');
    logger.log(`Checked db health! time taken: ${(Date.now() - startTime) / 1000} seconds!`);
