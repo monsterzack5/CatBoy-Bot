@@ -92,9 +92,6 @@ export function updateRatios(): void {
 }
 updateRatios();
 
-// periodically update the ratios
-setInterval(updateRatios, 600000);
-
 // gets a random cat from our db
 export function getRandomCat(uid: string): DiscordEmbedImageReply | void {
    // picks a random number between 0 and 1

@@ -7,11 +7,13 @@ import { db, memDb } from './db';
 import { updateChan } from './4chan';
 import { checkHealth } from './dbhealthcheck';
 import { bot } from './bot';
+import { updateRatios } from '../commands/catboy';
 
 const openSockets: Set<Socket> = new Set();
 const port = process.env.PORT || 5010;
 let httpServer: http.Server;
 let herokuPing: NodeJS.Timeout;
+let updateCatRatios: NodeJS.Timeout;
 let dbBackup: ScheduledTask;
 let dbHeathCheck: ScheduledTask;
 
@@ -28,6 +30,8 @@ export function startTimers(): void {
          openSockets.delete(socket);
       });
    });
+
+   updateCatRatios = setInterval(updateRatios, 600000);
 
    if (process.env.NODE_ENV === 'production') {
       // ping our dyno every 15 minutes so heroku doesnt murder it
@@ -72,6 +76,7 @@ async function stopBot(doArchive?: boolean): Promise<void> {
    dbBackup.destroy();
    dbHeathCheck.destroy();
    clearInterval(herokuPing);
+   clearInterval(updateCatRatios);
    if (doArchive) {
       await exportFile(`${process.env.dbFile}.db`, true, undefined, false);
    } else {
