@@ -36,7 +36,7 @@ bot.once('ready', async (): Promise<void> => {
 
    // read the config and set the prefix
    const config: ConfigOptions = JSON.parse(readFileSync(`./${process.env.configFile}.json`).toString());
-   process.env.prefix = config.prefix as string;
+   process.env.prefix = config.prefix;
 
    // set the game on boot
    if (config.gameUrl === '') {
@@ -48,6 +48,5 @@ bot.once('ready', async (): Promise<void> => {
    await loadCommandFiles();
 
    // once our commands are loaded, we can start our messageHandler and our timers
-   const { main } = await import('./messageHandler');
-   await main();
+   await import('./messageHandler');
 });
