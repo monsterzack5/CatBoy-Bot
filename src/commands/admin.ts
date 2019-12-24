@@ -27,6 +27,11 @@ export default (message: Message, args: string[]): void => {
       return;
    }
 
+   if (!args[0]) {
+      message.channel.send('You gotta give me something to do!');
+      return;
+   }
+
    switch (args[0].toLowerCase()) {
       case 'updateconfig':
          message.channel.send(`Updating ${process.env.configFile} using local version`);
