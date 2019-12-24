@@ -20,6 +20,7 @@
       "@typescript-eslint"
    ],
    "rules": {
+      "import/extensions": "off",
       "indent": "off",
       "@typescript-eslint/indent": ["error", 3, {
          "SwitchCase": 1
