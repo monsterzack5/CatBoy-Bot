@@ -83,7 +83,6 @@ async function getThread(thread: number): Promise<Post[] | []> {
       const body = req.body as ThreadPosts;
       if (req.statusCode === 200) {
          const lastModms = new Date(req.headers['last-modified'] as string).getTime();
-         console.log();
          updateThread.run(lastModms, body.posts.length, thread);
       } else if (req.statusCode === 304) {
          // if the api returns 304, then the thread has not been modified since last request
