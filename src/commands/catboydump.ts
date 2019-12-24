@@ -3,7 +3,7 @@ import { getRandomCat } from './catboy';
 import { DiscordEmbedImageReply } from '../typings/interfaces';
 
 export default async (message: Message): Promise<void> => {
-   const promiseCats: DiscordEmbedImageReply[] = [1, 2, 3, 4, 5].map(() => getRandomCat(message.author.id));
+   const promiseCats = [1, 2, 3, 4, 5].map(() => getRandomCat(message.author.id)) as DiscordEmbedImageReply[];
    const cats = await Promise.all(promiseCats);
    const reply = cats.reduce((acc, key) => `${acc}\n${key.embed.image.url}`, '');
    message.channel.send(reply);

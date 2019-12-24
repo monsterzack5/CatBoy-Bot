@@ -54,8 +54,9 @@ function bingCat(uid: string): DiscordEmbedImageReply {
 function chanCat(uid: string): DiscordEmbedImageReply {
    const random = Math.floor(Math.random() * chanCount);
    const cat = searchChan.get(random);
-   const url = `https://i.4cdn.org/cm/${cat.no}${cat.ext}`;
-   const reply = embedBuilder(url, 'https://boards.4channel.org/cm/catalog#s=catboy');
+   const url = `https://i.4cdn.org/cm/${cat.posttime}${cat.ext}`;
+   const threadWithPost = (cat.op !== 0) ? `${cat.op}#p${cat.postno}` : `${cat.postno}#p${cat.postno}`;
+   const reply = embedBuilder(url, `https://boards.4channel.org/cm/thread/${threadWithPost}`);
    updateChan.run(uid);
    return reply;
 }
@@ -95,15 +96,20 @@ updateRatios();
 setInterval(updateRatios, 600000);
 
 // gets a random cat from our db
-export function getRandomCat(uid: string): DiscordEmbedImageReply {
+export function getRandomCat(uid: string): DiscordEmbedImageReply | void {
    // picks a random number between 0 and 1
    const randomSearch = Math.random();
-   let reply;
-
-   if (randomSearch < dbRatios[0].ratio) reply = dbRatios[0].source(uid); else
-   if (randomSearch > dbRatios[0].ratio && randomSearch < dbRatios[1].ratio) reply = dbRatios[1].source(uid); else
-   if (randomSearch > dbRatios[1].ratio) reply = dbRatios[2].source(uid);
-   return reply as DiscordEmbedImageReply;
+   if (randomSearch < dbRatios[0].ratio) {
+      return dbRatios[0].source(uid);
+   }
+   if (randomSearch > dbRatios[0].ratio && randomSearch < dbRatios[1].ratio) {
+      return dbRatios[1].source(uid);
+   }
+   if (randomSearch > dbRatios[1].ratio) {
+      return dbRatios[2].source(uid);
+   }
+   // this should be impossible to reach
+   return undefined;
 }
 
 // this runs when you do !catboy
