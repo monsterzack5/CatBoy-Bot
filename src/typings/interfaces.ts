@@ -35,6 +35,7 @@ export interface Command {
       name: string;
       help?: string;
       timeout?: number;
+      alias?: string[];
    };
 }
 

@@ -18,4 +18,5 @@ export const help = {
    name: 'sayd',
    help: 'Who said that? :smirk_cat:',
    timeout: 1250,
+   alias: ['saydel'],
 };

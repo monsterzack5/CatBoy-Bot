@@ -38,4 +38,5 @@ export const help = {
    name: 'mycatboy',
    help: 'Sends your own personal catboy :kissing_cat:',
    timeout: 2000,
+   alias: ['mycat'],
 };

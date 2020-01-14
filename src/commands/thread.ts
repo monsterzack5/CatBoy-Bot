@@ -36,4 +36,5 @@ export const help = {
    name: 'thread',
    timeout: 5000,
    help: 'returns the current 4chan thread(s)',
+   alias: ['threads'],
 };

@@ -62,4 +62,5 @@ export default async (message: Message, args: string[]): Promise<void> => {
 
 export const help = {
    name: 'filter',
+   alias: ['filtercatboy'],
 };

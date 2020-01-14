@@ -30,6 +30,12 @@ export function createCommandsMap(): Commands {
    const botCommands = new Map();
    try {
       for (const command of cmdFiles) {
+         // if the command has any aliases, add them with a loop
+         if (Array.isArray(command.help.alias) && command.help.alias.length) {
+            for (const alias of command.help.alias) {
+               botCommands.set(alias, command.default);
+            }
+         }
          botCommands.set(command.help.name, command.default);
       }
    } catch (e) {

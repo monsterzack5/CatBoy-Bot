@@ -8,4 +8,5 @@ export const help = {
    name: 'invite',
    help: 'to get my invite link :smiley_cat:',
    timeout: 5000,
+   alias: ['catboyinvite'],
 };

@@ -69,4 +69,5 @@ export default (message: Message, args: string[]): void => {
 
 export const help = {
    name: 'game',
+   alias: ['changegame'],
 };

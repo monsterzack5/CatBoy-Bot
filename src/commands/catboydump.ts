@@ -13,4 +13,5 @@ export const help = {
    name: 'catboydump',
    help: 'Sends a whole bunch of catboys! :scream_cat:',
    timeout: 10000,
+   alias: ['dumpcatboys'],
 };
