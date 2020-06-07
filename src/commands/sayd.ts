@@ -3,7 +3,7 @@ import { bot } from '../utils/bot';
 
 export default (message: Message, args: string[]): void => {
    if (message.guild.member(bot.user).hasPermission('MANAGE_MESSAGES')) {
-      if (args.length === 0) {
+      if (!args.length) {
          message.react('❌');
          return;
       }
